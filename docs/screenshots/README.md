@@ -5,7 +5,7 @@ the paths must stay exactly as they are.
 
 | File | Screen |
 |---|---|
-| `01-search-light.jpg` | Search results, light theme |
+| `01-similar-light.jpg` | Similar tracks list, light theme |
 | `02-search-dark.jpg` | Search results with the Tracks/Videos switch, dark theme |
 | `03-player-dark.jpg` | Now playing screen |
 | `04-library-light.jpg` | Library: liked, downloaded, playlists |

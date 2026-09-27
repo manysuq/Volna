@@ -17,8 +17,8 @@
 <table>
   <tr>
   <td width="50%" valign="top">
-    <img src="docs/screenshots/01-search-light.jpg" alt="01-search" width="100%">
-    <p align="center"><sub>Пошук</sub></p>
+    <img src="docs/screenshots/01-similar-light.jpg" alt="01-similar" width="100%">
+    <p align="center"><sub>Падобныя трэкі</sub></p>
   </td>
   <td width="50%" valign="top">
     <img src="docs/screenshots/02-search-dark.jpg" alt="02-search" width="100%">
