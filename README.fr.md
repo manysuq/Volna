@@ -7,7 +7,7 @@
 # Volna
 
 <p align="center">
-  <a href="https://github.com/manysuq/Volna/releases/tag/v1.0.1"><img alt="⬇ Télécharger" src="https://img.shields.io/badge/v1.0.1-⬇%20Télécharger-2ea44f?style=for-the-badge"></a>
+  <a href="https://github.com/manysuq/Volna/releases/tag/v1.0.2"><img alt="⬇ Télécharger" src="https://img.shields.io/badge/v1.0.2-⬇%20Télécharger-2ea44f?style=for-the-badge"></a>
 </p>
 
 
@@ -106,8 +106,8 @@ JDK 17 et le SDK Android (compileSdk 35) sont requis.
 Chaque build de release est copié dans `dist/`, donc les builds ne s'écrasent pas :
 
 ```
-dist/volna-1.0.1-release.apk             build normal, com.volna.player
-dist/volna-1.0.1-FOR_ISLAND-<pkg>.apk    variante îlot dynamique, voir plus bas
+dist/volna-1.0.2-release.apk             build normal, com.volna.player
+dist/volna-1.0.2-FOR_ISLAND-<pkg>.apk    variante îlot dynamique, voir plus bas
 ```
 
 N'utilisez pas `app/build/outputs/apk/release` : c'est un dossier de travail

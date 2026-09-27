@@ -7,7 +7,7 @@
 # Volna
 
 <p align="center">
-  <a href="https://github.com/manysuq/Volna/releases/tag/v1.0.1"><img alt="⬇ Спампаваць" src="https://img.shields.io/badge/v1.0.1-⬇%20Спампаваць-2ea44f?style=for-the-badge"></a>
+  <a href="https://github.com/manysuq/Volna/releases/tag/v1.0.2"><img alt="⬇ Спампаваць" src="https://img.shields.io/badge/v1.0.2-⬇%20Спампаваць-2ea44f?style=for-the-badge"></a>
 </p>
 
 
@@ -108,8 +108,8 @@ YouTube Music пазначае кожны элемент тыпам (`Song`, `Vi
 Кожная зборка рэлізу капіруецца ў `dist/`, таму зборкі не заціраюць адна адна:
 
 ```
-dist/volna-1.0.1-release.apk             звычайная зборка, com.volna.player
-dist/volna-1.0.1-FOR_ISLAND-<пакет>.apk варыянт для дынамічнага астравка, гл. ніжэй
+dist/volna-1.0.2-release.apk             звычайная зборка, com.volna.player
+dist/volna-1.0.2-FOR_ISLAND-<пакет>.apk варыянт для дынамічнага астравка, гл. ніжэй
 ```
 
 Не выкарыстоўвай `app/build/outputs/apk/release`: гэта службовая тэчка, якую
