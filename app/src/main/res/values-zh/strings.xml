@@ -111,4 +111,6 @@
     <string name="playlist_move_down">下移</string>
     <string name="playlist_add">添加到播放列表</string>
     <string name="added_to_playlist">已添加到「%1$s」</string>
+    <string name="downloads_title">已下载</string>
+    <string name="library_play">播放</string>
 </resources>

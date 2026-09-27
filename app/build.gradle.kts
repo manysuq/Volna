@@ -17,17 +17,39 @@ val keystoreProps = Properties().apply {
 }
 val hasReleaseKeystore = keystoreProps.getProperty("storeFile") != null
 
+// ── Сборка FOR_ISLAND ────────────────────────────────────────────────────────
+// Некоторые оболочки (vivo/OriginOS и другие китайские) показывают развёрнутый
+// плавающий плеер только для пакетов из захардкоженного белого списка. Сборка
+// с ключом forIslandPackage меняет ТОЛЬКО applicationId — имя пакета на
+// устройстве, — и ничего больше:
+//
+//   ./gradlew assembleRelease -PforIslandPackage=com.spotify.music
+//
+// namespace остаётся com.volna.player: он отвечает за R-класс, BuildConfig и
+// разрешение относительных имён в манифесте, и его смена сломала бы сборку.
+// Основной пакет com.volna.player при этом не меняется — вариант собирается
+// только по явному ключу.
+//
+// Что нужно помнить: такой APK занимает чужое имя пакета, поэтому
+// установить его вместе с оригиналом нельзя — придётся удалить оригинал.
+// Это костыль для конкретных оболочек, а не универсальное решение.
+val forIslandPackage: String? = providers.gradleProperty("forIslandPackage").orNull
+val isIslandBuild = forIslandPackage != null && forIslandPackage.isNotBlank()
+val ISLAND_TAG = "FOR_ISLAND"
+
 
 android {
     namespace = "com.volna.player"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.volna.player"
+        applicationId = forIslandPackage ?: "com.volna.player"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
-        versionName = "1.0"
+        // Метка попадает в versionName, чтобы вариант был опознаваем на
+        // устройстве и в списке установленных пакетов.
+        versionName = if (isIslandBuild) "1.0-$ISLAND_TAG" else "1.0"
     }
 
     buildTypes {
@@ -87,6 +109,32 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+}
+
+// Имя файла отличается от обычного релиза, иначе сборка варианта затирала бы
+// основной APK в той же папке. Переименование сделано отдельной задачей,
+// а не через applicationVariants: этот API убран в новых версиях AGP.
+if (isIslandBuild) {
+    tasks.register("renameIslandApk") {
+        doLast {
+            val built = layout.buildDirectory.dir("outputs/apk/release").get().asFile
+            val source = File(built, "app-release.apk")
+            if (!source.exists()) return@doLast
+            // Копируем в dist/, а не переименовываем на месте: обычная сборка
+            // чистит outputs/, и вариант после неё пропадал бы. В dist/
+            // оба релиза лежат рядом и не мешают друг другу.
+            val dist = rootProject.file("dist").apply { mkdirs() }
+            val target = File(dist, "volna-1.0-$ISLAND_TAG-$forIslandPackage.apk")
+            source.copyTo(target, overwrite = true)
+            logger.lifecycle("Вариант $ISLAND_TAG: ${target.path}")
+        }
+    }
+    // matching + configureEach, а не tasks.named: на момент конфигурации
+    // задача assembleRelease ещё не зарегистрирована AGP, и named() падал
+    // с «Task with name 'assembleRelease' not found».
+    tasks.matching { it.name == "assembleRelease" }.configureEach {
+        finalizedBy("renameIslandApk")
     }
 }
 

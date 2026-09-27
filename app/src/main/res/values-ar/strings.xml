@@ -111,4 +111,6 @@
     <string name="playlist_move_down">تحريك لأسفل</string>
     <string name="playlist_add">إضافة إلى قائمة</string>
     <string name="added_to_playlist">أُضيف إلى «%1$s»</string>
+    <string name="downloads_title">التنزيلات</string>
+    <string name="library_play">تشغيل</string>
 </resources>

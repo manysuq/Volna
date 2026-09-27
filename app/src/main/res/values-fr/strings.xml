@@ -111,4 +111,6 @@
     <string name="playlist_move_down">Descendre</string>
     <string name="playlist_add">Ajouter à une liste</string>
     <string name="added_to_playlist">Ajouté à « %1$s »</string>
+    <string name="downloads_title">Téléchargés</string>
+    <string name="library_play">Écouter</string>
 </resources>

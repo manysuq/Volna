@@ -96,6 +96,8 @@ fun TrackRow(
     // экраны, которым они не нужны, ничего не передавали.
     isFavorite: Boolean? = null,
     onToggleFavorite: (() -> Unit)? = null,
+    // Явная кнопка play: в медиатеке тап по строке без неё неочевиден.
+    onPlayButton: (() -> Unit)? = null,
     onMoveUp: (() -> Unit)? = null,
     onMoveDown: (() -> Unit)? = null,
     onRemoveFromList: (() -> Unit)? = null,
@@ -167,6 +169,20 @@ fun TrackRow(
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            if (onPlayButton != null) {
+                SmallRoundButton(
+                    onClick = onPlayButton,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
+                ) {
+                    Icon(
+                        Icons.Filled.PlayArrow,
+                        contentDescription = stringResource(R.string.library_play),
+                    )
+                }
+            }
             if (onMoveUp != null || onMoveDown != null) {
                 Column {
                     if (onMoveUp != null) {

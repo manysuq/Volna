@@ -136,4 +136,6 @@
     <string name="playlist_move_down">Ниже</string>
     <string name="playlist_add">В плейлист</string>
     <string name="added_to_playlist">Добавлено в «%1$s»</string>
+    <string name="downloads_title">Скачанные</string>
+    <string name="library_play">Слушать</string>
 </resources>

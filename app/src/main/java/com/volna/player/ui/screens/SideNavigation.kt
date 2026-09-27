@@ -5,7 +5,17 @@ package com.volna.player.ui.screens
 import com.volna.player.R
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,7 +32,6 @@ import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -51,7 +60,6 @@ enum class AppTab(@StringRes val title: Int, val icon: ImageVector) {
     Search(R.string.tab_search, Icons.Filled.Search),
     Albums(R.string.tab_albums, Icons.Filled.Album),
     Recommendations(R.string.tab_similar, Icons.Filled.Explore),
-    Downloads(R.string.tab_downloads, Icons.Filled.LibraryMusic),
     Library(R.string.tab_library, Icons.Filled.Favorite),
 }
 
@@ -72,6 +80,8 @@ fun SideNavigation(
     onToggleTheme: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
+    order: List<AppTab> = TabOrder.DEFAULT,
+    onReorder: (List<AppTab>) -> Unit = { },
 ) {
     Column(
         modifier = modifier
@@ -105,14 +115,12 @@ fun SideNavigation(
             contentAlignment = Alignment.Center,
         ) {
             RotatedRail {
-                AppTab.entries.forEach { tab ->
-                    RailItem(
-                        title = stringResource(tab.title),
-                        icon = tab.icon,
-                        selected = tab == current,
-                        onClick = { onSelect(tab) },
-                    )
-                }
+                ReorderableRail(
+                    order = order,
+                    current = current,
+                    onSelect = onSelect,
+                    onReorder = onReorder,
+                )
             }
         }
 
@@ -142,6 +150,7 @@ private fun RailItem(
     icon: ImageVector,
     selected: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val highlight by animateFloatAsState(if (selected) 1f else 0f, label = "railHighlight")
     val content = if (selected) {
@@ -152,7 +161,7 @@ private fun RailItem(
 
     // Ряд вытянут вдоль панели: после поворота иконка снизу, подпись над ней
     Row(
-        modifier = Modifier
+        modifier = modifier
             .clip(MaterialTheme.shapes.extraLarge)
             .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.08f + 0.92f * highlight))
             .selectable(selected = selected, role = Role.Tab, onClick = onClick)
@@ -201,3 +210,85 @@ private fun RotatedRail(content: @Composable RowScope.() -> Unit) {
 
 /** Толщина панели на экране: это высота повёрнутого содержимого. */
 private val RAIL_THICKNESS = 72.dp
+
+/**
+ * Рельс вкладок с перестановкой долгим нажатием.
+ *
+ * Жест сделан по локальной оси узла: система уже разворачивает координаты
+ * для повёрнутого контейнера, поэтому индекс считается по локальной
+ * координате, а не по экранной. Сама перестановка — чистая функция
+ * [TabOrder.move], её поведение покрыто тестом.
+ */
+@Composable
+private fun ReorderableRail(
+    order: List<AppTab>,
+    current: AppTab,
+    onSelect: (AppTab) -> Unit,
+    onReorder: (List<AppTab>) -> Unit,
+) {
+    var draggingIndex by remember { mutableStateOf<Int?>(null) }
+    var itemHeight by remember { mutableIntStateOf(0) }
+    val density = LocalDensity.current
+
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        order.forEachIndexed { index, tab ->
+            val isDragging = draggingIndex == index
+            RailItem(
+                title = stringResource(tab.title),
+                icon = tab.icon,
+                selected = tab == current,
+                onClick = { onSelect(tab) },
+                modifier = Modifier
+                    .onGloballyPositioned {
+                        if (itemHeight == 0) itemHeight = it.size.height
+                    }
+                    .pointerInput(order, itemHeight) {
+                        detectDragGesturesAfterLongPress(
+                            onDragStart = { draggingIndex = index },
+                            onDragEnd = { draggingIndex = null },
+                            onDragCancel = { draggingIndex = null },
+                            onDrag = { change, dragAmount ->
+                                change.consume()
+                                if (itemHeight > 0) {
+                                    // dragAmount здесь — Offset, а не число:
+                                    // так объявлен onDrag у
+                                    // detectDragGesturesAfterLongPress. Раньше
+                                    // с ним сравнивали как со скаляром, и
+                                    // код не собирался.
+                                    //
+                                    // Ось y: элементы рельса уложены вдоль
+                                    // локальной Y, а система уже развернула
+                                    // координаты под поворот панели.
+                                    val half = itemHeight / 2
+                                    val delta = dragAmount.y.toInt()
+                                    val shift = when {
+                                        delta > half -> 1
+                                        delta < -half -> -1
+                                        else -> 0
+                                    }
+                                    if (shift != 0) {
+                                        val from = draggingIndex ?: index
+                                        val destination = from + shift
+                                        // Явные границы вместо `in indices`:
+                                        // внутри pointerInput проверка по
+                                        // диапазону не разрешалась.
+                                        val last = order.size - 1
+                                        if (destination in 0..last && from in 0..last) {
+                                            onReorder(TabOrder.move(order, from, destination))
+                                            draggingIndex = destination
+                                        }
+                                    }
+                                }
+                            },
+                        )
+                    }
+                    .graphicsLayer {
+                        if (isDragging) {
+                            scaleX = 1.08f
+                            scaleY = 1.08f
+                        }
+                    },
+            )
+        }
+    }
+}

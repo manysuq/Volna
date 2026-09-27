@@ -34,6 +34,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Forward10
 import androidx.compose.material.icons.filled.MusicNote
@@ -120,6 +121,8 @@ fun FullPlayerScreen(
     onToggleShuffle: () -> Unit,
     onDownload: () -> Unit,
     onCancelDownload: () -> Unit,
+    isFavorite: Boolean = false,
+    onToggleFavorite: () -> Unit = { },
     onShare: () -> Unit,
     onRetry: () -> Unit,
     onCollapse: () -> Unit,
@@ -251,6 +254,8 @@ fun FullPlayerScreen(
                 onToggleShuffle = onToggleShuffle,
                 onDownload = onDownload,
                 onCancelDownload = onCancelDownload,
+                isFavorite = isFavorite,
+                onToggleFavorite = onToggleFavorite,
             )
 
             Spacer(Modifier.height(10.dp))
@@ -565,6 +570,8 @@ private fun SecondaryActions(
     onToggleShuffle: () -> Unit,
     onDownload: () -> Unit,
     onCancelDownload: () -> Unit,
+    isFavorite: Boolean = false,
+    onToggleFavorite: () -> Unit = { },
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),

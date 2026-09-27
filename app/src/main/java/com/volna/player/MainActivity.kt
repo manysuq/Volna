@@ -45,13 +45,13 @@ import com.volna.player.ui.screens.AlbumScreen
 import com.volna.player.ui.screens.AlbumsScreen
 import com.volna.player.ui.screens.AppTab
 import com.volna.player.ui.screens.ArtistScreen
-import com.volna.player.ui.screens.DownloadsScreen
 import com.volna.player.ui.screens.FullPlayerScreen
 import com.volna.player.ui.screens.LibraryScreen
 import com.volna.player.ui.screens.MiniPlayer
 import com.volna.player.ui.screens.RecommendationsScreen
 import com.volna.player.ui.screens.SearchScreen
 import com.volna.player.ui.screens.SettingsScreen
+import com.volna.player.ui.screens.TabOrder
 import com.volna.player.ui.screens.SideNavigation
 import com.volna.player.ui.theme.AppLanguage
 import com.volna.player.ui.theme.ThemeMode
@@ -135,6 +135,7 @@ fun PlayerContent(
     viewModel: PlayerViewModel = viewModel(),
 ) {
     val context = LocalContext.current
+    var tabOrder by remember { mutableStateOf(TabOrder.load(context)) }
     var tab by rememberSaveable { mutableStateOf(AppTab.Search) }
     var fullPlayer by rememberSaveable { mutableStateOf(false) }
     var catalogRoute by remember { mutableStateOf<CatalogRoute>(CatalogRoute.Artists) }
@@ -186,7 +187,7 @@ fun PlayerContent(
     // Реестр читается при показе вкладки: иначе он оставался бы пустым после
     // скачивания до перезапуска.
     LaunchedEffect(tab) {
-        if (tab == AppTab.Downloads) viewModel.refreshSaved()
+        if (tab == AppTab.Library) viewModel.refreshSaved()
         if (tab == AppTab.Library) viewModel.refreshLibrary()
     }
 
@@ -232,6 +233,11 @@ fun PlayerContent(
             SideNavigation(
                 current = tab,
                 onSelect = { tab = it },
+                order = tabOrder,
+                onReorder = { newOrder ->
+                    tabOrder = newOrder
+                    TabOrder.save(context, newOrder)
+                },
                 isDarkTheme = isDarkTheme,
                 onToggleTheme = onToggleTheme,
                 onOpenSettings = { showSettings = true },
@@ -297,13 +303,12 @@ fun PlayerContent(
                             onRemoveFromPlaylist = { viewModel.removeFromPlaylist(openPlaylist?.id ?: "", it) },
                             onMoveInPlaylist = { id, delta -> viewModel.moveInPlaylist(openPlaylist?.id ?: "", id, delta) },
                             onToggleFavorite = viewModel::toggleFavorite,
-                        )
-
-                        AppTab.Downloads -> DownloadsScreen(
+                            progressMap = progress,
                             saved = savedTracks,
-                            currentTrackId = nowPlaying?.id,
-                            onPlay = viewModel::playSaved,
-                            onDelete = { viewModel.deleteSaved(it.id) },
+                            onPlaySaved = { id ->
+                                savedTracks.firstOrNull { it.id == id }?.let(viewModel::playSaved)
+                            },
+                            onDeleteSaved = { viewModel.deleteSaved(it.id) },
                         )
 
                         AppTab.Albums -> when (val route = catalogRoute) {
@@ -386,10 +391,26 @@ fun PlayerContent(
                 onCancelDownload = { viewModel.cancelDownload(current.id) },
                 onShare = { shareTrack(context, current) },
                 onRetry = viewModel::retryStream,
+                isFavorite = nowPlaying?.let { viewModel.isFavorite(it.id) } == true,
+                onToggleFavorite = { nowPlaying?.let(viewModel::toggleFavorite) },
                 onCollapse = { fullPlayer = false },
             )
         }
     }
+}
+
+/**
+ * Ссылка, которую имеет смысл отдавать наружу.
+ *
+ * У локально сохранённого трека videoUrl — это content:// на файл в Music:
+ * такую ссылку не откроет ни одно другое приложение, и получатель получит
+ * бесполезный текст. Поэтому для них берём исходную ссылку на YouTube, а у
+ * обычных треков — как есть.
+ */
+private fun shareUrl(track: Track): String {
+    val url = track.videoUrl
+    val isLocalFile = url.startsWith("content://") || url.startsWith("file://")
+    return if (isLocalFile) "https://www.youtube.com/watch?v=${track.id}" else url
 }
 
 /** Отправляет ссылку на трек в системное меню «Поделиться». */
@@ -398,7 +419,7 @@ private fun shareTrack(context: Context, track: Track) {
         type = "text/plain"
         putExtra(
             Intent.EXTRA_TEXT,
-            "${track.title} — ${track.musicArtist.ifBlank { track.channel }}\n${track.videoUrl}",
+            "${track.title} — ${track.musicArtist.ifBlank { track.channel }}\n${shareUrl(track)}",
         )
     }
     context.startActivity(Intent.createChooser(intent, context.getString(R.string.player_share_chooser)))

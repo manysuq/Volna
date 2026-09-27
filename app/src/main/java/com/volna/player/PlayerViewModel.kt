@@ -324,7 +324,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             channel = item.artist,
             durationSeconds = item.durationSeconds,
             thumbnailUrl = item.thumbnailUrl,
-            videoUrl = item.uri,
+            // Именно ссылка на YouTube, а не локальный content://: иначе
+            // «Поделиться» отдаёт слушателю нерабочую ссылку на файл.
+            videoUrl = item.sourceUrl,
             isOfficialMusic = true,
             musicArtist = item.artist,
             album = item.album,
@@ -399,6 +401,11 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         downloads.store.remove(trackId)
         refreshSaved()
     }
+
+    /** Готовая ссылка на трек в YouTube для «Поделиться». */
+    fun savedSourceUrl(trackId: String): String =
+        downloads.store.find(trackId)?.sourceUrl
+            ?: "https://www.youtube.com/watch?v=$trackId"
 
     fun togglePlayPause() {
         val player = PlaybackService.player(getApplication()) ?: run {

@@ -139,4 +139,6 @@
     <string name="playlist_move_down">Move down</string>
     <string name="playlist_add">Add to playlist</string>
     <string name="added_to_playlist">Added to %1$s</string>
+    <string name="downloads_title">Downloaded</string>
+    <string name="library_play">Play</string>
 </resources>

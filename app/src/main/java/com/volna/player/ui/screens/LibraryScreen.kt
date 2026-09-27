@@ -38,15 +38,21 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.volna.player.R
+import com.volna.player.download.DownloadProgress
+import com.volna.player.download.DownloadState
+import com.volna.player.download.SavedTrack
 import com.volna.player.library.Playlist
 import com.volna.player.search.Track
 
 /**
- * Медиатека: «нравится» и свои плейлисты.
+ * Медиатека: «нравится», свои плейлисты и скачанные треки.
  *
- * Два уровня в одном экране — список плейлистов и содержимое открытого.
- * Отдельный экран для плейлиста заводить не стали: жест «назад» и кнопка
- * «назад» должны работать одинаково в обоих случаях.
+ * Отдельной вкладки «Треки» больше нет — в рельсе для неё не осталось места,
+ * а по смыслу это часть медиатеки.
+ *
+ * Про то, откуда играть, решает вызывающий: [onPlaySaved] приходит по id трека,
+ * и если он лежит на диске, ViewModel играет файл, а не идёт в сеть. Здесь
+ * только проверка «скачан ли», чтобы показать отметку.
  */
 @Composable
 fun LibraryScreen(
@@ -64,8 +70,20 @@ fun LibraryScreen(
     onMoveInPlaylist: (String, Int) -> Unit,
     onToggleFavorite: (Track) -> Unit,
     modifier: Modifier = Modifier,
+    progressMap: Map<String, DownloadProgress> = emptyMap(),
+    saved: List<SavedTrack> = emptyList(),
+    onPlaySaved: (String) -> Unit = { },
+    onDeleteSaved: (SavedTrack) -> Unit = { },
 ) {
     var showCreate by remember { mutableStateOf(false) }
+    val savedIds = remember(saved) { saved.mapTo(mutableSetOf()) { it.id } }
+
+    fun playItem(track: Track, queue: List<Track>) {
+        if (track.id in savedIds) onPlaySaved(track.id) else onPlay(track, queue)
+    }
+
+    fun downloadState(track: Track): DownloadProgress? =
+        progressMap[track.id] ?: savedTrackStub(track.id in savedIds)
 
     if (openPlaylist != null) {
         PlaylistContent(
@@ -73,10 +91,11 @@ fun LibraryScreen(
             tracks = playlistTracks,
             currentTrackId = currentTrackId,
             onBack = onClosePlaylist,
-            onPlay = onPlay,
+            onPlay = ::playItem,
             onRemove = onRemoveFromPlaylist,
             onMove = onMoveInPlaylist,
             onToggleFavorite = onToggleFavorite,
+            downloadState = ::downloadState,
             modifier = modifier,
         )
         return
@@ -108,38 +127,35 @@ fun LibraryScreen(
         if (favorites.isEmpty()) {
             item { EmptyNote(R.string.favorites_empty) }
         } else {
-            item {
-                TextButton(
-                    onClick = { onPlay(favorites.first(), favorites) },
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                ) {
-                    Icon(Icons.Filled.PlayArrow, null, Modifier.size(18.dp))
-                    Text(
-                        text = stringResource(R.string.playlist_play_all),
-                        modifier = Modifier.padding(start = 6.dp),
-                    )
-                }
-            }
+            item { PlayAllRow { onPlay(favorites.first(), favorites) } }
             items(favorites, key = { "fav_" + it.id }) { track ->
                 TrackRow(
                     track = track,
-                    download = null,
+                    download = downloadState(track),
                     isCurrent = track.id == currentTrackId,
                     isFavorite = true,
-                    onPlay = { onPlay(track, favorites) },
+                    onPlay = { playItem(track, favorites) },
+                    onPlayButton = { playItem(track, favorites) },
                     onDownload = { },
                     onCancel = { },
                     onToggleFavorite = { onToggleFavorite(track) },
                 )
             }
         }
-        item {
-            Text(
-                text = stringResource(R.string.playlists_title),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(16.dp),
-            )
+
+        if (saved.isNotEmpty()) {
+            item { SectionTitle(R.string.downloads_title) }
+            items(saved, key = { "dl_" + it.id }) { item ->
+                SavedTrackRow(
+                    item = item,
+                    isCurrent = item.id == currentTrackId,
+                    onPlay = { onPlaySaved(item.id) },
+                    onDelete = { onDeleteSaved(item) },
+                )
+            }
         }
+
+        item { SectionTitle(R.string.playlists_title) }
         if (playlists.isEmpty()) item { EmptyNote(R.string.playlists_empty) }
         items(playlists, key = { it.id }) { playlist ->
             PlaylistRow(
@@ -148,6 +164,35 @@ fun LibraryScreen(
                 onDelete = { onDeletePlaylist(playlist) },
             )
         }
+    }
+}
+
+/**
+ * Отметка «уже скачано» для трека, лежащего на диске.
+ *
+ * Реестр загрузок живёт в памяти и после перезапуска пуст, поэтому медиатека
+ * сама не знала, что трек скачан. Отметка восстанавливает это знание.
+ */
+private fun savedTrackStub(isSaved: Boolean): DownloadProgress? =
+    if (isSaved) DownloadProgress(trackId = "", state = DownloadState.DONE) else null
+
+@Composable
+private fun SectionTitle(textRes: Int) {
+    Text(
+        text = stringResource(textRes),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(16.dp),
+    )
+}
+
+@Composable
+private fun PlayAllRow(onPlay: () -> Unit) {
+    TextButton(onClick = onPlay, modifier = Modifier.padding(horizontal = 12.dp)) {
+        Icon(Icons.Filled.PlayArrow, null, Modifier.size(18.dp))
+        Text(
+            text = stringResource(R.string.playlist_play_all),
+            modifier = Modifier.padding(start = 6.dp),
+        )
     }
 }
 
@@ -188,7 +233,7 @@ private fun PlaylistRow(playlist: Playlist, onOpen: () -> Unit, onDelete: () -> 
     }
 }
 
-/** Содержимое одного плейлиста: порядок задаётся кнопками со стрелками. */
+/** Содержимое плейлиста: порядок задаётся кнопками со стрелками. */
 @Composable
 private fun PlaylistContent(
     playlist: Playlist,
@@ -199,6 +244,7 @@ private fun PlaylistContent(
     onRemove: (String) -> Unit,
     onMove: (String, Int) -> Unit,
     onToggleFavorite: (Track) -> Unit,
+    downloadState: (Track) -> DownloadProgress?,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
@@ -227,12 +273,7 @@ private fun PlaylistContent(
         }
 
         if (tracks.isEmpty()) {
-            Text(
-                text = stringResource(R.string.playlist_empty),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(16.dp),
-            )
+            EmptyNote(R.string.playlist_empty)
             return
         }
 
@@ -240,10 +281,11 @@ private fun PlaylistContent(
             itemsIndexed(tracks) { index, track ->
                 TrackRow(
                     track = track,
-                    download = null,
+                    download = downloadState(track),
                     isCurrent = track.id == currentTrackId,
                     isFavorite = false,
                     onPlay = { onPlay(track, tracks) },
+                    onPlayButton = { onPlay(track, tracks) },
                     onDownload = { },
                     onCancel = { },
                     onToggleFavorite = { onToggleFavorite(track) },

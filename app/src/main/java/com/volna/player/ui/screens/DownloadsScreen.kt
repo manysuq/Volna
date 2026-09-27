@@ -69,7 +69,7 @@ fun DownloadsScreen(
 }
 
 @Composable
-private fun SavedTrackRow(
+fun SavedTrackRow(
     item: SavedTrack,
     isCurrent: Boolean,
     onPlay: () -> Unit,

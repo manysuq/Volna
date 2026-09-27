@@ -18,6 +18,8 @@ data class SavedTrack(
     val artist: String,
     val album: String,
     val uri: String,
+    /** Ссылка на трек в YouTube: в «Поделиться» уходит она, а не content://. */
+    val sourceUrl: String,
     val durationSeconds: Int,
     val thumbnailUrl: String,
     val sizeBytes: Long,
@@ -63,6 +65,7 @@ class DownloadStore(context: Context) {
                     artist = o.optString("artist"),
                     album = o.optString("album"),
                     uri = o.optString("uri"),
+                    sourceUrl = o.optString("sourceUrl"),
                     durationSeconds = o.optInt("duration"),
                     thumbnailUrl = o.optString("thumb"),
                     sizeBytes = o.optLong("size"),
@@ -82,7 +85,8 @@ class DownloadStore(context: Context) {
             array.put(
                 JSONObject().apply {
                     put("id", t.id); put("title", t.title); put("artist", t.artist)
-                    put("album", t.album); put("uri", t.uri); put("duration", t.durationSeconds)
+                    put("album", t.album); put("uri", t.uri); put("sourceUrl", t.sourceUrl)
+                    put("duration", t.durationSeconds)
                     put("thumb", t.thumbnailUrl); put("size", t.sizeBytes); put("savedAt", t.savedAt)
                 },
             )
@@ -163,6 +167,7 @@ class DownloadStore(context: Context) {
             artist = track.musicArtist.ifBlank { track.channel },
             album = track.album,
             uri = uri,
+            sourceUrl = track.videoUrl,
             durationSeconds = track.durationSeconds,
             thumbnailUrl = track.thumbnailUrl,
             sizeBytes = sizeBytes,
