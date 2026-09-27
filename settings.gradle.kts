@@ -5,6 +5,6 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories { google(); mavenCentral() }
 }
-rootProject.name = "YTDLPlayer"
+rootProject.name = "Volna"
 include(":app")
 include(":ytdl")
