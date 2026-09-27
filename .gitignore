@@ -11,6 +11,11 @@ build/
 # Локальное окружение: путь к SDK у каждого свой
 local.properties
 
+# Подпись релиза: пароли и приватный ключ не должны попасть в репозиторий
+keystore.properties
+*.jks
+*.keystore
+
 # IDE
 .idea/
 *.iml

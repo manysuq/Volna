@@ -1,8 +1,22 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
+// Ключ подписи берётся из keystore.properties рядом с проектом.
+// Сам файл в git не попадает (см. .gitignore): пароли не должны лежать в репозитории.
+// Без него релизная сборка всё равно собирается, но остаётся неподписанной.
+val keystorePropsFile = rootProject.file("keystore.properties")
+val keystoreProps = Properties().apply {
+    if (keystorePropsFile.exists()) {
+        keystorePropsFile.inputStream().use { load(it) }
+    }
+}
+val hasReleaseKeystore = keystoreProps.getProperty("storeFile") != null
+
 
 android {
     namespace = "com.volna.player"
@@ -20,6 +34,22 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Без ключа сборка не падает, а остаётся unsigned — так её можно
+            // запустить на чистой машине, просто не устанавливая в магазин.
+            if (hasReleaseKeystore) {
+                val release = signingConfigs.create("release") {
+                    storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
+                    storePassword = keystoreProps.getProperty("storePassword")
+                    keyAlias = keystoreProps.getProperty("keyAlias")
+                    keyPassword = keystoreProps.getProperty("keyPassword")
+                    // v1 нужен для Android 6 и старше, v2/v3 — для современных.
+                    // Без v3 APK не обновляется поверх установленного на Android 11+.
+                    enableV1Signing = true
+                    enableV2Signing = true
+                    enableV3Signing = true
+                }
+                signingConfig = release
+            }
         }
     }
 
