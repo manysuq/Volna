@@ -115,4 +115,6 @@
     <string name="library_play">Escuchar</string>
     <string name="error_artist_no_tracks">No se encontraron pistas de este artista</string>
     <string name="artist_play_all">Escuchar todo</string>
+    <string name="rail_hide">Ocultar panel</string>
+    <string name="rail_show">Mostrar panel</string>
 </resources>

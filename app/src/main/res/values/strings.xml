@@ -143,4 +143,6 @@
     <string name="library_play">Play</string>
     <string name="error_artist_no_tracks">No tracks found for this artist</string>
     <string name="artist_play_all">Play all</string>
+    <string name="rail_hide">Hide panel</string>
+    <string name="rail_show">Show panel</string>
 </resources>

@@ -140,4 +140,6 @@
     <string name="library_play">Слушать</string>
     <string name="error_artist_no_tracks">У исполнителя не нашлось треков</string>
     <string name="artist_play_all">Слушать всё</string>
+    <string name="rail_hide">Скрыть панель</string>
+    <string name="rail_show">Показать панель</string>
 </resources>

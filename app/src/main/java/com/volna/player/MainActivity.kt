@@ -13,6 +13,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -33,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -52,6 +55,8 @@ import com.volna.player.ui.screens.RecommendationsScreen
 import com.volna.player.ui.screens.SearchScreen
 import com.volna.player.ui.screens.SettingsScreen
 import com.volna.player.ui.screens.TabOrder
+import com.volna.player.ui.screens.RailHandle
+import com.volna.player.ui.screens.RailVisibility
 import com.volna.player.ui.screens.SideNavigation
 import com.volna.player.ui.theme.AppLanguage
 import com.volna.player.ui.theme.ThemeMode
@@ -136,6 +141,7 @@ fun PlayerContent(
 ) {
     val context = LocalContext.current
     var tabOrder by remember { mutableStateOf(TabOrder.load(context)) }
+    var railVisible by rememberSaveable { mutableStateOf(RailVisibility.load(context)) }
     var tab by rememberSaveable { mutableStateOf(AppTab.Search) }
     var fullPlayer by rememberSaveable { mutableStateOf(false) }
     var catalogRoute by remember { mutableStateOf<CatalogRoute>(CatalogRoute.Artists) }
@@ -229,8 +235,14 @@ fun PlayerContent(
     // того экрана, куда плеер как раз и возвращается.
     Box(modifier = Modifier.fillMaxSize()) {
         Row(modifier = Modifier.fillMaxSize()) {
-            // Повёрнутая боковая навигация
-            SideNavigation(
+            // Панель вкладок можно убрать: на узком экране она отнимает
+            // 72dp ширины. Когда скрыта, остаётся узкая ручка у левого края.
+            AnimatedVisibility(
+                visible = railVisible,
+                enter = expandHorizontally(expandFrom = Alignment.Start),
+                exit = shrinkHorizontally(shrinkTowards = Alignment.Start),
+            ) {
+                SideNavigation(
                 current = tab,
                 onSelect = { tab = it },
                 order = tabOrder,
@@ -241,7 +253,21 @@ fun PlayerContent(
                 isDarkTheme = isDarkTheme,
                 onToggleTheme = onToggleTheme,
                 onOpenSettings = { showSettings = true },
-            )
+                onHide = {
+                    railVisible = false
+                    RailVisibility.save(context, false)
+                },
+                )
+            }
+
+            if (!railVisible) {
+                RailHandle(
+                    onShow = {
+                        railVisible = true
+                        RailVisibility.save(context, true)
+                    },
+                )
+            }
 
             Scaffold(
                 modifier = Modifier.weight(1f),

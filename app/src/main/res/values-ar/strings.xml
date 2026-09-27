@@ -115,4 +115,6 @@
     <string name="library_play">تشغيل</string>
     <string name="error_artist_no_tracks">لم يُعثر على مقاطع لهذا الفنان</string>
     <string name="artist_play_all">تشغيل الكل</string>
+    <string name="rail_hide">إخفاء اللوحة</string>
+    <string name="rail_show">إظهار اللوحة</string>
 </resources>

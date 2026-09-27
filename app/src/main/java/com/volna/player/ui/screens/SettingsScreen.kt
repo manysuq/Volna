@@ -293,6 +293,8 @@ private fun languageName(language: AppLanguage): String = when (language) {
     AppLanguage.System -> ""
     AppLanguage.English -> "English"
     AppLanguage.Russian -> "Русский"
+    AppLanguage.Ukrainian -> "Українська"
+    AppLanguage.Belarusian -> "Беларуская"
     AppLanguage.French -> "Français"
     AppLanguage.Spanish -> "Español"
     AppLanguage.Chinese -> "中文"

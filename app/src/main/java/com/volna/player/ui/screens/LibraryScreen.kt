@@ -15,7 +15,16 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PlayArrow
@@ -128,17 +137,15 @@ fun LibraryScreen(
             item { EmptyNote(R.string.favorites_empty) }
         } else {
             item { PlayAllRow { onPlay(favorites.first(), favorites) } }
-            items(favorites, key = { "fav_" + it.id }) { track ->
-                TrackRow(
+            itemsIndexed(favorites, key = { _, t -> "fav_" + t.id }) { index, track ->
+                LibraryTrackRow(
                     track = track,
                     download = downloadState(track),
                     isCurrent = track.id == currentTrackId,
                     isFavorite = true,
                     onPlay = { playItem(track, favorites) },
-                    onPlayButton = { playItem(track, favorites) },
-                    onDownload = { },
-                    onCancel = { },
                     onToggleFavorite = { onToggleFavorite(track) },
+                    showDivider = index < favorites.lastIndex,
                 )
             }
         }
@@ -279,19 +286,17 @@ private fun PlaylistContent(
 
         LazyColumn(contentPadding = PaddingValues(bottom = 120.dp)) {
             itemsIndexed(tracks) { index, track ->
-                TrackRow(
+                LibraryTrackRow(
                     track = track,
                     download = downloadState(track),
                     isCurrent = track.id == currentTrackId,
                     isFavorite = false,
                     onPlay = { onPlay(track, tracks) },
-                    onPlayButton = { onPlay(track, tracks) },
-                    onDownload = { },
-                    onCancel = { },
                     onToggleFavorite = { onToggleFavorite(track) },
                     onMoveUp = if (index > 0) ({ onMove(track.id, -1) }) else null,
                     onMoveDown = if (index < tracks.lastIndex) ({ onMove(track.id, 1) }) else null,
                     onRemoveFromList = { onRemove(track.id) },
+                    showDivider = index < tracks.lastIndex,
                 )
             }
         }
@@ -321,4 +326,174 @@ private fun CreatePlaylistDialog(onConfirm: (String) -> Unit, onDismiss: () -> U
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.playlist_cancel)) }
         },
     )
+}
+
+/**
+ * Строка трека в медиатеке.
+ *
+ * Название и исполнитель сверху, кнопки под ними, между треками — тонкая
+ * черта. Раньше всё было в одну горизонтальную строку, и кнопки по 40dp
+ * вместе с обложкой съедали ширину: на само название оставалось около 58dp,
+ * то есть в списке читалось только «А» и многоточие.
+ */
+@Composable
+private fun LibraryTrackRow(
+    track: Track,
+    download: DownloadProgress?,
+    isCurrent: Boolean,
+    isFavorite: Boolean,
+    onPlay: () -> Unit,
+    onToggleFavorite: () -> Unit,
+    onMoveUp: (() -> Unit)? = null,
+    onMoveDown: (() -> Unit)? = null,
+    onRemoveFromList: (() -> Unit)? = null,
+    showDivider: Boolean = true,
+) {
+    val isDownloading = download?.state == DownloadState.DOWNLOADING ||
+        download?.state == DownloadState.QUEUED
+
+    Column(modifier = Modifier.fillMaxWidth().clickable(onClick = onPlay)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            TrackThumbnail(track, Modifier.size(52.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = track.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isCurrent) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = track.musicArtist.ifBlank { track.channel },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            LibraryAction(
+                onClick = onPlay,
+                container = MaterialTheme.colorScheme.primaryContainer,
+                content = MaterialTheme.colorScheme.onPrimaryContainer,
+            ) {
+                Icon(
+                    Icons.Filled.PlayArrow,
+                    contentDescription = stringResource(R.string.library_play),
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            LibraryAction(
+                onClick = onToggleFavorite,
+                container = if (isFavorite) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant
+                },
+                content = if (isFavorite) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            ) {
+                Icon(
+                    Icons.Filled.Favorite,
+                    contentDescription = stringResource(R.string.favorite_toggle),
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            if (onMoveUp != null) {
+                LibraryAction(
+                    onClick = onMoveUp,
+                    container = MaterialTheme.colorScheme.surfaceVariant,
+                    content = MaterialTheme.colorScheme.onSurfaceVariant,
+                ) {
+                    Icon(
+                        Icons.Filled.KeyboardArrowUp,
+                        contentDescription = stringResource(R.string.playlist_move_up),
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
+            if (onMoveDown != null) {
+                LibraryAction(
+                    onClick = onMoveDown,
+                    container = MaterialTheme.colorScheme.surfaceVariant,
+                    content = MaterialTheme.colorScheme.onSurfaceVariant,
+                ) {
+                    Icon(
+                        Icons.Filled.KeyboardArrowDown,
+                        contentDescription = stringResource(R.string.playlist_move_down),
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
+            if (onRemoveFromList != null) {
+                LibraryAction(
+                    onClick = onRemoveFromList,
+                    container = MaterialTheme.colorScheme.surfaceVariant,
+                    content = MaterialTheme.colorScheme.onSurfaceVariant,
+                ) {
+                    Icon(
+                        Icons.Filled.Delete,
+                        contentDescription = stringResource(R.string.playlist_remove),
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
+            if (isDownloading) {
+                CircularProgressIndicator(
+                    progress = { (download?.percent ?: 0) / 100f },
+                    modifier = Modifier.size(22.dp),
+                    strokeWidth = 2.dp,
+                )
+            } else if (download?.state == DownloadState.DONE) {
+                Icon(
+                    Icons.Filled.CloudDone,
+                    contentDescription = stringResource(R.string.download_done),
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
+
+        if (showDivider) {
+            HorizontalDivider(
+                modifier = Modifier.padding(start = 80.dp),
+                color = MaterialTheme.colorScheme.outlineVariant,
+            )
+        }
+    }
+}
+
+/** Круглая кнопка под треком: компактнее, чем в горизонтальной строке поиска. */
+@Composable
+private fun LibraryAction(
+    onClick: () -> Unit,
+    container: androidx.compose.ui.graphics.Color,
+    content: androidx.compose.ui.graphics.Color,
+    icon: @Composable () -> Unit,
+) {
+    Button(
+        onClick = onClick,
+        shape = CircleShape,
+        contentPadding = PaddingValues(0.dp),
+        modifier = Modifier.size(36.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = container, contentColor = content),
+    ) { icon() }
 }

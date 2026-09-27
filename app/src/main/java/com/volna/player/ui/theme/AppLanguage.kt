@@ -16,6 +16,8 @@ enum class AppLanguage(val tag: String) {
     System(""),
     English("en"),
     Russian("ru"),
+    Ukrainian("uk"),
+    Belarusian("be"),
     French("fr"),
     Spanish("es"),
     Chinese("zh"),

@@ -94,7 +94,7 @@ android {
     defaultConfig {
         // Языки, которые переведены полностью: без этого в настройках
         // показывается весь список системных локалей устройства.
-        resourceConfigurations += setOf("en", "ru", "fr", "es", "zh", "ar")
+        resourceConfigurations += setOf("en", "ru", "uk", "be", "fr", "es", "zh", "ar")
     }
 
     testOptions {

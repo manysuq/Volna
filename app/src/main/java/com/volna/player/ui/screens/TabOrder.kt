@@ -57,3 +57,27 @@ object TabOrder {
         return result
     }
 }
+
+/**
+ * Видна ли боковая панель.
+ *
+ * Панель занимает 72dp по всей высоте и на узком экране отнимает заметную
+ * часть ширины, поэтому её можно убрать и вернуть кнопкой у самого края.
+ * Состояние запоминается: панель не должна выскакивать при каждом запуске.
+ */
+object RailVisibility {
+
+    private const val PREFS = "volna_tabs"
+    private const val KEY_VISIBLE = "rail_visible"
+
+    fun load(context: Context): Boolean =
+        context.applicationContext
+            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_VISIBLE, true)
+
+    fun save(context: Context, visible: Boolean) {
+        context.applicationContext
+            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putBoolean(KEY_VISIBLE, visible).apply()
+    }
+}

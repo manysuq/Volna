@@ -29,6 +29,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Explore
@@ -82,6 +84,7 @@ fun SideNavigation(
     modifier: Modifier = Modifier,
     order: List<AppTab> = TabOrder.DEFAULT,
     onReorder: (List<AppTab>) -> Unit = { },
+    onHide: () -> Unit = { },
 ) {
     Column(
         modifier = modifier
@@ -133,12 +136,23 @@ fun SideNavigation(
                 .padding(vertical = 6.dp),
             contentAlignment = Alignment.Center,
         ) {
-            IconButton(onClick = onOpenSettings) {
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = stringResource(R.string.settings_open),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                // Прячем панель целиком: на узком экране она отнимает 72dp
+                // ширины, а вернуть её можно ручкой у самого края.
+                IconButton(onClick = onHide) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        contentDescription = stringResource(R.string.rail_hide),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                IconButton(onClick = onOpenSettings) {
+                    Icon(
+                        imageVector = Icons.Filled.Settings,
+                        contentDescription = stringResource(R.string.settings_open),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
@@ -292,5 +306,30 @@ private fun RowScope.ReorderableRail(
                     }
                 },
         )
+    }
+}
+
+/**
+ * Узкая ручка у левого края, когда панель скрыта.
+ *
+ * Не повёрнута, в отличие от вкладок: её назначение — вернуть панель, и
+ * стрелка должна читаться сразу. Ширины хватает, чтобы её попасть пальцем.
+ */
+@Composable
+fun RailHandle(onShow: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .width(32.dp)
+            .fillMaxHeight()
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+        contentAlignment = Alignment.Center,
+    ) {
+        IconButton(onClick = onShow) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = stringResource(R.string.rail_show),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
