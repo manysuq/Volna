@@ -7,7 +7,7 @@
 # Volna
 
 <p align="center">
-  <a href="https://github.com/manysuq/Volna/releases/tag/v1.0.2"><img alt="⬇ تنزيل" src="https://img.shields.io/badge/v1.0.2-⬇%20تنزيل-2ea44f?style=for-the-badge"></a>
+  <a href="https://github.com/manysuq/Volna/releases/tag/v1.0.3"><img alt="⬇ تنزيل" src="https://img.shields.io/badge/v1.0.3-⬇%20تنزيل-2ea44f?style=for-the-badge"></a>
 </p>
 
 
@@ -103,8 +103,8 @@ POST https://music.youtube.com/youtubei/v1/search   عميل WEB_REMIX
 تُنسخ كل نسخة إصدار إلى `dist/`، فلا تدهس نسخةٌ أخرى:
 
 ```
-dist/volna-1.0.2-release.apk             النسخة العادية، com.volna.player
-dist/volna-1.0.2-FOR_ISLAND-<pkg>.apk    نسخة الجزيرة الديناميكية، انظر أدناه
+dist/volna-1.0.3-release.apk             النسخة العادية، com.volna.player
+dist/volna-1.0.3-FOR_ISLAND-<pkg>.apk    نسخة الجزيرة الديناميكية، انظر أدناه
 ```
 
 لا تستخدم `app/build/outputs/apk/release`: فهي مجلد عمل يُستبدل محتواه مع كل
