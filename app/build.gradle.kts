@@ -112,30 +112,37 @@ android {
     }
 }
 
-// Имя файла отличается от обычного релиза, иначе сборка варианта затирала бы
-// основной APK в той же папке. Переименование сделано отдельной задачей,
-// а не через applicationVariants: этот API убран в новых версиях AGP.
-if (isIslandBuild) {
-    tasks.register("renameIslandApk") {
-        doLast {
-            val built = layout.buildDirectory.dir("outputs/apk/release").get().asFile
-            val source = File(built, "app-release.apk")
-            if (!source.exists()) return@doLast
-            // Копируем в dist/, а не переименовываем на месте: обычная сборка
-            // чистит outputs/, и вариант после неё пропадал бы. В dist/
-            // оба релиза лежат рядом и не мешают друг другу.
-            val dist = rootProject.file("dist").apply { mkdirs() }
-            val target = File(dist, "volna-1.0-$ISLAND_TAG-$forIslandPackage.apk")
-            source.copyTo(target, overwrite = true)
-            logger.lifecycle("Вариант $ISLAND_TAG: ${target.path}")
+// Каждый релиз копируется в dist/ под своим именем.
+//
+// Раньше вариант FOR_ISLAND просто переименовывался на месте, и в
+// outputs/apk/release/app-release.apk оказывался именно он — обычный APK
+// исчезал, и его ставили по ошибке. Теперь в dist/ лежат оба сразу:
+//   volna-1.0-release.apk                          — обычный, com.volna.player
+//   volna-1.0-FOR_ISLAND-<пакет>.apk               — вариант для динамического острова
+//
+// outputs/ остаётся служебной папкой Gradle и перезаписывается каждой сборкой.
+tasks.register("publishReleaseApk") {
+    doLast {
+        val built = layout.buildDirectory.dir("outputs/apk/release").get().asFile
+        val source = File(built, "app-release.apk")
+        if (!source.exists()) return@doLast
+        val dist = rootProject.file("dist").apply { mkdirs() }
+        val name = if (isIslandBuild) {
+            "volna-1.0-$ISLAND_TAG-$forIslandPackage.apk"
+        } else {
+            "volna-1.0-release.apk"
         }
+        val target = File(dist, name)
+        source.copyTo(target, overwrite = true)
+        logger.lifecycle("Релиз: ${target.path}")
     }
-    // matching + configureEach, а не tasks.named: на момент конфигурации
-    // задача assembleRelease ещё не зарегистрирована AGP, и named() падал
-    // с «Task with name 'assembleRelease' not found».
-    tasks.matching { it.name == "assembleRelease" }.configureEach {
-        finalizedBy("renameIslandApk")
-    }
+}
+
+// matching + configureEach, а не tasks.named: на момент конфигурации задача
+// assembleRelease ещё не зарегистрирована AGP, и named() падал с
+// «Task with name 'assembleRelease' not found».
+tasks.matching { it.name == "assembleRelease" }.configureEach {
+    finalizedBy("publishReleaseApk")
 }
 
 dependencies {

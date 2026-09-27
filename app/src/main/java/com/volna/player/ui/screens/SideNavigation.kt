@@ -220,18 +220,20 @@ private val RAIL_THICKNESS = 72.dp
  * [TabOrder.move], её поведение покрыто тестом.
  */
 @Composable
-private fun ReorderableRail(
+private fun RowScope.ReorderableRail(
     order: List<AppTab>,
     current: AppTab,
     onSelect: (AppTab) -> Unit,
     onReorder: (List<AppTab>) -> Unit,
 ) {
     var draggingIndex by remember { mutableStateOf<Int?>(null) }
-    var itemHeight by remember { mutableIntStateOf(0) }
-    val density = LocalDensity.current
+    var itemWidth by remember { mutableIntStateOf(0) }
 
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        order.forEachIndexed { index, tab ->
+    // Вкладки lays-out прямо в Row, без промежуточного Column: RotatedRail
+    // меряет содержимое с ограничением по высоте, равным толщине панели, и
+    // вложенный Column делил эту высоту между пунктами — на экране оставалась
+    // только первая вкладка.
+    order.forEachIndexed { index, tab ->
             val isDragging = draggingIndex == index
             RailItem(
                 title = stringResource(tab.title),
@@ -240,27 +242,28 @@ private fun ReorderableRail(
                 onClick = { onSelect(tab) },
                 modifier = Modifier
                     .onGloballyPositioned {
-                        if (itemHeight == 0) itemHeight = it.size.height
+                        if (itemWidth == 0) itemWidth = it.size.width
                     }
-                    .pointerInput(order, itemHeight) {
+                    .pointerInput(order, itemWidth) {
                         detectDragGesturesAfterLongPress(
                             onDragStart = { draggingIndex = index },
                             onDragEnd = { draggingIndex = null },
                             onDragCancel = { draggingIndex = null },
                             onDrag = { change, dragAmount ->
                                 change.consume()
-                                if (itemHeight > 0) {
+                                if (itemWidth > 0) {
                                     // dragAmount здесь — Offset, а не число:
                                     // так объявлен onDrag у
                                     // detectDragGesturesAfterLongPress. Раньше
                                     // с ним сравнивали как со скаляром, и
                                     // код не собирался.
                                     //
-                                    // Ось y: элементы рельса уложены вдоль
-                                    // локальной Y, а система уже развернула
-                                    // координаты под поворот панели.
-                                    val half = itemHeight / 2
-                                    val delta = dragAmount.y.toInt()
+                                    // Ось x: вкладки уложены вдоль главной
+                                    // оси Row. Система уже развернула координаты
+                                    // под поворот панели, поэтому палец, идущий
+                                    // вдоль рельса, даёт движение именно по x.
+                                    val half = itemWidth / 2
+                                    val delta = dragAmount.x.toInt()
                                     val shift = when {
                                         delta > half -> 1
                                         delta < -half -> -1
@@ -282,13 +285,12 @@ private fun ReorderableRail(
                             },
                         )
                     }
-                    .graphicsLayer {
-                        if (isDragging) {
-                            scaleX = 1.08f
-                            scaleY = 1.08f
-                        }
-                    },
-            )
-        }
+                .graphicsLayer {
+                    if (isDragging) {
+                        scaleX = 1.08f
+                        scaleY = 1.08f
+                    }
+                },
+        )
     }
 }
