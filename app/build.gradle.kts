@@ -39,7 +39,7 @@ val ISLAND_TAG = "FOR_ISLAND"
 
 // Версия в одном месте: раньше "1.0" было написано трижды, и при смене версии
 // одно из этих мест забывали — имя файла в dist/ расходилось с versionName.
-val APP_VERSION = "1.0.1"
+val APP_VERSION = "1.0.2"
 
 
 android {
@@ -50,10 +50,11 @@ android {
         applicationId = forIslandPackage ?: "com.volna.player"
         minSdk = 24
         targetSdk = 35
-        versionCode = 2
+        versionCode = 3
         // Метка попадает в versionName, чтобы вариант был опознаваем на
         // устройстве и в списке установленных пакетов.
         versionName = if (isIslandBuild) "$APP_VERSION-$ISLAND_TAG" else APP_VERSION
+
     }
 
     buildTypes {

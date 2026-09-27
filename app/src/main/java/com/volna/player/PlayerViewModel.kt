@@ -12,6 +12,7 @@ import com.volna.player.library.LibraryStore
 import com.volna.player.library.Playlist
 import com.volna.player.download.DownloadProgress
 import com.volna.player.player.PlaybackService
+import com.volna.player.player.ReconnectPolicy
 import com.volna.player.search.Track
 import com.volna.player.search.RecommendationClient
 import com.volna.player.search.SearchMode
@@ -116,6 +117,19 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             // Поток отвалился: молча берём свежую ссылку и переподключаемся
             PlaybackService.faults.collect { reconnect(app) }
+        }
+        viewModelScope.launch {
+            // Плеер стоит, хотя играть должен. В фоне сеть для приложения
+            // режется, буфер доигрывает и всё: ошибки при этом нет — плеер
+            // просто молча стоит. Лечится тем же, чем обрыв, — свежей ссылкой.
+            PlaybackService.stalled.collect { positionMs ->
+                val track = _nowPlaying.value ?: return@collect
+                com.volna.player.LogBuffer.w(
+                    "PlayerViewModel",
+                    "зависание на ${positionMs / 1000}с, перезапускаем поток оттуда же",
+                )
+                recoverFromStall(track, positionMs)
+            }
         }
         viewModelScope.launch {
             // Трек доиграл: переключаемся так же, как по кнопке «вперёд».
@@ -230,7 +244,12 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** Отдаёт готовую ссылку плееру. [resetQueue]=false — сохраняем очередь. */
-    private suspend fun startPlayback(track: Track, url: String, resetQueue: Boolean = true) {
+    private suspend fun startPlayback(
+        track: Track,
+        url: String,
+        resetQueue: Boolean = true,
+        resumeMs: Long = 0L,
+    ) {
         currentUrl = url
         if (resetQueue) {
             streamQueue = mutableListOf(track to url)
@@ -241,14 +260,19 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         PlaybackService.playStream(
             getApplication(), track, url,
             streamQueue.toList(),
+            resumeMs,
         )
         _playbackError.value = null
         _streamState.value = StreamState.Ready
-        // Счётчик попыток живёт только до первого успеха. Раньше он не
-        // обнулялся здесь, и три ошибки за сессии (на любых треках) выдавали
-        // «сдались», после чего автопереподключение переставало работать до
-        // перезапуска приложения: play() его сбрасывает, а reconnect — нет.
-        retryAttempts = 0
+        // Счётчик попыток обнуляется только на НОВОМ треке, выбранном
+        // пользователем. Раньше он обнулялся здесь всегда — и переподключение
+        // обнуляло счётчик сам у себя: попытка успевала дойти до startPlayback
+        // и обнулить число, которое сама же только что увеличила. В логе
+        // поэтому девять раз подряд шло «переподключение 1/3», лимит в 3 был
+        // недостижим в принципе, а пауза застряла на 700 мс.
+        // С reconnect счётчик не сбрасывается: с лимитом это ломает
+        // автопереподключение насовсем, а без лимита — честный счёт попыток.
+        if (resetQueue) retryAttempts = 0
     }
 
     /**
@@ -258,26 +282,31 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private fun reconnect(app: Application) {
         val track = _nowPlaying.value ?: return
         if (track.isLive) return                       // у трансляций ссылка не протухает
-        if (retryAttempts >= MAX_RECONNECTS) {
-            _streamState.value = StreamState.Error(getApplication<Application>().getString(R.string.error_stream_gave_up))
-            return
-        }
-        retryAttempts++
-        _streamState.value = StreamState.Resolving
-        // Каждое переподключение попадает в лог: «играет через раз» — это
-        // именно цепочка попыток, и по ней видно, что именно ломается.
-        com.volna.player.LogBuffer.w(
-            "PlayerViewModel",
-            "переподключение $retryAttempts/$MAX_RECONNECTS: «${track.title}»",
-        )
         viewModelScope.launch {
-            delay(700L * retryAttempts)
-            val url = resolver.resolve(track)
-            if (url == null) {
-                _streamState.value = StreamState.Error(getApplication<Application>().getString(R.string.error_no_stream))
-                return@launch
+            // Ссылка может не получиться с первого раза — тогда повторяем
+            // внутри того же цикла, а не ждём новой ошибки от плеера: ошибки
+            // уже не будет, некому её породить.
+            while (true) {
+                retryAttempts++
+                val attempt = retryAttempts
+                _streamState.value = StreamState.Resolving
+                // Номер попытки в логе: раньше здесь всегда было «1/3», и по
+                // отчёту нельзя было понять, растёт ли пауза.
+                com.volna.player.LogBuffer.w(
+                    "PlayerViewModel",
+                    "переподключение №$attempt: «${track.title}»",
+                )
+                delay(ReconnectPolicy.delayMs(attempt))
+                val url = resolver.resolve(track)
+                if (url != null) {
+                    startPlayback(track, url, resetQueue = false)
+                    return@launch
+                }
+                com.volna.player.LogBuffer.e(
+                    "PlayerViewModel",
+                    "ссылку взять не удалось, пробуем снова (попытка $attempt)",
+                )
             }
-            startPlayback(track, url, resetQueue = false)
         }
     }
 
@@ -441,7 +470,36 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         val current = _nowPlaying.value ?: return
         if (!AlbumOrder.isFresh(finishedId, current.id)) return   // устаревшее
         if (!AlbumOrder.shouldAdvance(_repeatMode.value)) return
+        com.volna.player.LogBuffer.d(
+            "PlayerViewModel",
+            "доиграл «${current.title}», берём следующий",
+        )
         step(1)
+    }
+
+    /**
+     * Перезапуск потока после зависания.
+     *
+     * Отдельный метод, а не вызов reconnect, потому что reconnect начинает с
+     * нуля: при обрыве это верно (игра прервалась), а при зависании нет — трек
+     * надо продолжить с того же места. Иначе песня каждые полминуты
+     * начинается заново.
+     *
+     * Счётчик попыток не трогаем: зависание не связано со ссылкой, и тратить
+     * на него лимит бессмысленно — тут их и так нет.
+     */
+    private fun recoverFromStall(track: Track, positionMs: Long) {
+        viewModelScope.launch {
+            val url = resolver.resolve(track)
+            if (url == null) {
+                com.volna.player.LogBuffer.e(
+                    "PlayerViewModel",
+                    "зависание: ссылку взять не удалось, ждём дальше",
+                )
+                return@launch
+            }
+            startPlayback(track, url, resetQueue = false, resumeMs = positionMs)
+        }
     }
 
     fun nextTrack() = step(1)
@@ -906,9 +964,6 @@ internal object AlbumOrder {
 
 /** Сколько треков готовим заранее во время игры. */
 private const val QUEUE_PRELOAD = 3
-
-/** Сколько раз подряд переподключаемся после обрыва, прежде чем сдаться. */
-private const val MAX_RECONNECTS = 3
 
 sealed interface StreamState {
     data object Idle : StreamState
