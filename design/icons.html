@@ -26,6 +26,7 @@
 </head>
 <body>
 <h1>Волна — варианты иконки</h1>
+<p class="sub" style="color:#14655C;font-weight:600">Выбрано: Дуга, тёмная подложка</p>
 <p class="sub">Приложение для музыки. Показан размер 84, 48 и 32 px, светлая и тёмная подложка.</p>
 <div class="grid" id="grid"></div>
 <h3>Плитки подряд, как в выпадающем списке</h3>
@@ -75,8 +76,8 @@ function tile(icon,variant,px,cls){
   return `<div class="tile ${cls||''}" style="background:${v.bg}">${svg(icon,v.fg,px)}</div>`;
 }
 document.getElementById('grid').innerHTML=Object.values(icons).map(i=>`
-  <div class="card">
-    <h2>${i.name}</h2><p>${i.desc}</p>
+  <div class="card" style="${i.name==='Дуга'?'outline:2.5px solid #14655C;':''}">
+    <h2>${i.name}${i.name==='Дуга'?' ✓':''}</h2><p>${i.desc}</p>
     <div class="row">${tile(i,'light')}<div><div class="lbl">84 px</div>
       <div class="row" style="margin:6px 0 0;gap:8px">${tile(i,'light',48)}${tile(i,'light',32)}</div></div></div>
     <div class="row dark" style="padding:12px;border-radius:20px">

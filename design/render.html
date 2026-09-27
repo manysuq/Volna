@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Volna — рендер иконки</title>
+<style>body{margin:0;background:#fff}</style>
+</head>
+<body>
+<!-- Холст 108×108 = safe-зона adaptive-иконки; PNG рендерится в 432 и уменьшается. -->
+<svg id="icon" xmlns="http://www.w3.org/2000/svg" width="432" height="432" viewBox="0 0 108 108">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0F3A2E"/>
+      <stop offset="100%" stop-color="#0A221A"/>
+    </linearGradient>
+  </defs>
+  <rect width="108" height="108" fill="url(#bg)"/>
+  <g fill="none" stroke="#94E2BE" stroke-width="6.5" stroke-linecap="round">
+    <path d="M32,66a22,22 0 0 1 44,0"/>
+    <path d="M43,66a11,11 0 0 1 22,0"/>
+  </g>
+</svg>
+</body>
+</html>
