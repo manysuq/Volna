@@ -37,6 +37,10 @@ val forIslandPackage: String? = providers.gradleProperty("forIslandPackage").orN
 val isIslandBuild = forIslandPackage != null && forIslandPackage.isNotBlank()
 val ISLAND_TAG = "FOR_ISLAND"
 
+// Версия в одном месте: раньше "1.0" было написано трижды, и при смене версии
+// одно из этих мест забывали — имя файла в dist/ расходилось с versionName.
+val APP_VERSION = "1.0.1"
+
 
 android {
     namespace = "com.volna.player"
@@ -46,10 +50,10 @@ android {
         applicationId = forIslandPackage ?: "com.volna.player"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
+        versionCode = 2
         // Метка попадает в versionName, чтобы вариант был опознаваем на
         // устройстве и в списке установленных пакетов.
-        versionName = if (isIslandBuild) "1.0-$ISLAND_TAG" else "1.0"
+        versionName = if (isIslandBuild) "$APP_VERSION-$ISLAND_TAG" else APP_VERSION
     }
 
     buildTypes {
@@ -117,8 +121,8 @@ android {
 // Раньше вариант FOR_ISLAND просто переименовывался на месте, и в
 // outputs/apk/release/app-release.apk оказывался именно он — обычный APK
 // исчезал, и его ставили по ошибке. Теперь в dist/ лежат оба сразу:
-//   volna-1.0-release.apk                          — обычный, com.volna.player
-//   volna-1.0-FOR_ISLAND-<пакет>.apk               — вариант для динамического острова
+//   volna-<версия>-release.apk                     — обычный, com.volna.player
+//   volna-<версия>-FOR_ISLAND-<пакет>.apk          — вариант для динамического острова
 //
 // outputs/ остаётся служебной папкой Gradle и перезаписывается каждой сборкой.
 tasks.register("publishReleaseApk") {
@@ -128,9 +132,9 @@ tasks.register("publishReleaseApk") {
         if (!source.exists()) return@doLast
         val dist = rootProject.file("dist").apply { mkdirs() }
         val name = if (isIslandBuild) {
-            "volna-1.0-$ISLAND_TAG-$forIslandPackage.apk"
+            "volna-$APP_VERSION-$ISLAND_TAG-$forIslandPackage.apk"
         } else {
-            "volna-1.0-release.apk"
+            "volna-$APP_VERSION-release.apk"
         }
         val target = File(dist, name)
         source.copyTo(target, overwrite = true)

@@ -466,7 +466,15 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         val current = _nowPlaying.value ?: return
         val album = albumContext
         if (album != null) {
-            when (val target = AlbumOrder.target(album.tracks.size, album.index, delta, _repeatMode.value)) {
+            val target = AlbumOrder.target(
+                size = album.tracks.size,
+                index = album.index,
+                delta = delta,
+                repeatMode = _repeatMode.value,
+                shuffled = _shuffle.value,
+                random = { Random.nextInt(it) },
+            )
+            when (target) {
                 // Репит альбома: с конца возвращаемся к началу, с начала — в конец.
                 is AlbumOrder.Target.Track -> playAlbumTrack(target.index)
                 // Конец альбома: продолжаем похожим, как это делает любой плеер.
@@ -558,8 +566,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         if (!_shuffle.value) return               // выключили: остаёмся на текущем
         val album = albumContext ?: return
         if (album.tracks.size < 2) return
-        var next = album.index
-        while (next == album.index) next = Random.nextInt(album.tracks.size)
+        val next = AlbumOrder.randomOtherIndex(album.tracks.size, album.index) { Random.nextInt(it) }
         playAlbumTrack(next)
     }
 
@@ -829,10 +836,25 @@ internal object AlbumOrder {
 
     /**
      * [size] — сколько треков в альбоме, [index] — текущий (0-based),
-     * [delta] — +1 «вперёд» или -1 «назад», [repeatMode] — Player.REPEAT_MODE_*.
+     * [delta] — +1 «вперёд» или -1 «назад», [repeatMode] — Player.REPEAT_MODE_*,
+     * [shuffled] — включено ли перемешивание, [random] — выбор случайного трека.
+     *
+     * Перемешивание действует на весь переход вперёд, а не один раз: раньше
+     * [com.volna.player.PlayerViewModel.toggleShuffle] прыгала на случайный трек
+     * единожды, после чего [target] снова считал `index + 1` — и дальше шёл
+     * порядок, от того трека, куда бросило. Функция [random] внедрена, чтобы
+     * правило можно было проверить тестом, а не только на глаз.
      */
-    fun target(size: Int, index: Int, delta: Int, repeatMode: Int): Target {
+    fun target(
+        size: Int,
+        index: Int,
+        delta: Int,
+        repeatMode: Int,
+        shuffled: Boolean = false,
+        random: (Int) -> Int = { 0 },
+    ): Target {
         if (size <= 0) return Target.Restart
+        if (shuffled && delta > 0) return Target.Track(randomOtherIndex(size, index, random))
         val next = index + delta
         if (next in 0 until size) return Target.Track(next)
         if (repeatMode == Player.REPEAT_MODE_ALL) {
@@ -840,6 +862,21 @@ internal object AlbumOrder {
             return Target.Track(if (delta > 0) 0 else size - 1)
         }
         return if (delta > 0) Target.Radio else Target.Restart
+    }
+
+    /**
+     * Случайный трек альбома, отличный от текущего.
+     *
+     * Требование «не бросать на тот же трек» оказалось нетривиальным: одно
+     * условие вида «если выпало то же — пробуем ещё раз» зацикливается, если
+     * генератор выдаёт одно и то же. Поэтому сравниваем результат с текущим
+     * индексом и отступаем на шаг, а не крутим цикл.
+     */
+    fun randomOtherIndex(size: Int, current: Int, random: (Int) -> Int): Int {
+        if (size <= 1) return current
+        val picked = random(size)
+        if (picked == current) return (current + 1) % size
+        return picked
     }
 
     /**

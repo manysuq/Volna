@@ -125,3 +125,66 @@ class AlbumOrderTest {
         assertTrue(AlbumOrder.isFresh(finishedId = "LBmQKUdKy8g", currentId = null))
     }
 }
+/**
+ * Перемешивание.
+ *
+ * Баг был такой: кнопка перемешивания бросала на случайный трек один раз, а
+ * дальше `target` снова считал `index + 1` — и порядок возвращался, причём уже
+ * от того трека, куда бросило. Проверяем, что режим держится на каждом шаге.
+ */
+class AlbumShuffleTest {
+
+    private val off = Player.REPEAT_MODE_OFF
+
+    @Test
+    fun `вперемешку идёт по всему альбому, а не по порядку`() {
+        val target = AlbumOrder.target(5, 2, 1, off, shuffled = true) { 4 }
+        assertEquals(Target.Track(4), target)
+    }
+
+    @Test
+    fun `перемешивание не возвращает порядок на втором шаге`() {
+        // Порядок дал бы 3; перемешивание обязано снова взять случайный трек.
+        val target = AlbumOrder.target(5, 3, 1, off, shuffled = true) { 0 }
+        assertEquals(Target.Track(0), target)
+    }
+
+    @Test
+    fun `перемешивание никогда не выбирает текущий трек`() {
+        val sizes = 3..12
+        for (size in sizes) {
+            for (current in 0 until size) {
+                val picked = AlbumOrder.randomOtherIndex(size, current) { 7 % size }
+                assertTrue(
+                    "размер=$size текущий=$current выпал=$picked",
+                    picked != current && picked in 0 until size,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `случайный выбор не зацикливается на одном треке`() {
+        // Раньше был `while (next == index) next = Random.nextInt(size)`.
+        // С генератором, который всегда возвращает одно и то же, этот цикл
+        // не заканчивается никогда — и вешает поток. Проверяем выход за шаг:
+        // выпал текущий — отступаем на следующий по кругу.
+        assertEquals(2, AlbumOrder.randomOtherIndex(4, 1) { 1 })
+        assertEquals(0, AlbumOrder.randomOtherIndex(4, 3) { 3 })
+    }
+
+    @Test
+    fun `назад при перемешивании идёт по треклисту`() {
+        assertEquals(Target.Track(2), AlbumOrder.target(5, 3, -1, off, shuffled = true) { 0 })
+    }
+
+    @Test
+    fun `выключенное перемешивание ведёт себя как раньше`() {
+        assertEquals(Target.Track(3), AlbumOrder.target(5, 2, 1, off, shuffled = false) { 0 })
+    }
+
+    @Test
+    fun `альбом из одного трека при перемешивании не ломается`() {
+        assertEquals(0, AlbumOrder.randomOtherIndex(1, 0) { 0 })
+    }
+}
