@@ -58,12 +58,41 @@
     <string name="download_done">Downloaded</string>
     <string name="download_listen">Listen</string>
 
+    <!-- Режим поиска -->
+    <string name="search_mode_tracks">Tracks</string>
+    <string name="search_mode_videos">Videos</string>
+    <string name="search_mode_hint">Search mode</string>
+    <string name="search_hint_video">Video or channel</string>
+
+    <!-- Настройки -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme_system">Follow system</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_system">System default</string>
+    <string name="settings_support">Support</string>
+    <string name="settings_copy_logs">Copy logs</string>
+    <string name="settings_logs_copied">Logs copied to clipboard</string>
+    <string name="settings_logs_empty">No logs recorded yet</string>
+    <string name="settings_copy_failed">Couldn\'t copy logs</string>
+    <string name="settings_github">Project on GitHub</string>
+    <string name="settings_github_unavailable">No app to open the link</string>
+    <string name="settings_about">About</string>
+    <string name="settings_about_text">Volna plays tracks straight from YouTube Music over a network stream. No account, no ads, no file is saved. The project is open source under the MIT license.</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_open">Open settings</string>
+    <string name="settings_back">Back</string>
+    <string name="settings_license">MIT license · open source</string>
+
     <!-- Тема -->
     <string name="theme_light">Light theme</string>
     <string name="theme_dark">Dark theme</string>
 
     <!-- Ошибки -->
     <string name="error_no_stream">YouTube isn\'t serving audio for this track</string>
+    <string name="error_player_unavailable">The player could not start. Please try again</string>
     <string name="error_retry_prompt">Stream failed. Tap Retry</string>
     <string name="error_no_url">Couldn\'t get a stream URL for this track</string>
     <string name="error_stream_gave_up">The stream stopped responding. Tap Retry</string>
@@ -82,4 +111,6 @@
     <!-- Уведомление -->
     <string name="notification_channel">Playback</string>
     <string name="notification_connecting">Connecting…</string>
+    <string name="player_shuffle">Shuffle</string>
+    <string name="notice_not_in_music">Not in YouTube Music — trying videos for “%1$s”</string>
 </resources>

@@ -81,8 +81,8 @@ class YouTubeSearchException(
  * (`POST https://www.youtube.com/youtubei/v1/search`) без внешних зависимостей:
  * HTTP — `HttpURLConnection`, JSON — `org.json` (входит в Android).
  *
- * Используется клиент ANDROID 20.10.38: он отдаёт длительность, канал и прямые
- * ссылки на обложки без капчи и без подписи запроса.
+ * Используется клиент WEB 2.20240101: клиент ANDROID на этом эндпоинте
+ * не отдаёт ни одного результата.
  *
  * Класс потокобезопасен: состояние запроса не хранится, один экземпляр можно
  * переиспользовать из нескольких корутин.
@@ -185,9 +185,8 @@ class YouTubeSearch(
     /** Тело запроса InnerTube. Запрос экранируется самим JSONObject. */
     private fun buildRequestBody(query: String): JSONObject {
         val client = JSONObject()
-            .put("clientName", "ANDROID")
+            .put("clientName", "WEB")
             .put("clientVersion", CLIENT_VERSION)
-            .put("androidSdkVersion", ANDROID_SDK_VERSION)
             .put("hl", "hl")
             .put("gl", "GL")
             .put("userAgent", USER_AGENT)
@@ -237,10 +236,18 @@ class YouTubeSearch(
 
         const val ENDPOINT = "https://www.youtube.com/youtubei/v1/search?prettyPrint=false"
         const val ORIGIN = "https://www.youtube.com"
-        const val CLIENT_VERSION = "20.10.38"
-        const val ANDROID_SDK_VERSION = 34
+        /**
+         * Клиент `WEB`, а не `ANDROID`.
+         *
+         * Проверено вживую: `ANDROID` на `www.youtube.com/youtubei/v1/search`
+         * не отдаёт ни одного `videoRenderer` — ни с `params`, ни без. Поиск по
+         * видео молча возвращал пустоту, и запасной путь подбора трека не работал
+         * никогда. `WEB` отдаёт 12-17 видео, и официальный трек в них первый.
+         */
+        const val CLIENT_VERSION = "2.20240101.00.00"
         const val USER_AGENT =
-            "com.google.android.youtube/20.10.38 (Linux; U; Android 14) gzip"
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+                "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
 
         /** Фильтр InnerTube: только видео (EgWKAQIIAWoKEAkQBRAKEAMQBA%3D%3D). */
         const val SEARCH_PARAMS = "EgWKAQIIAWoKEAkQBRAKEAMQBA%3D%3D"

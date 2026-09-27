@@ -55,12 +55,41 @@
     <string name="download_done">Скачано</string>
     <string name="download_listen">Слушать</string>
 
+    <!-- Режим поиска -->
+    <string name="search_mode_tracks">Треки</string>
+    <string name="search_mode_videos">Видео</string>
+    <string name="search_mode_hint">Режим поиска</string>
+    <string name="search_hint_video">Видео или канал</string>
+
+    <!-- Настройки -->
+    <string name="settings_title">Настройки</string>
+    <string name="settings_appearance">Оформление</string>
+    <string name="settings_theme_system">Как в системе</string>
+    <string name="settings_theme_light">Светлая</string>
+    <string name="settings_theme_dark">Тёмная</string>
+    <string name="settings_language">Язык</string>
+    <string name="settings_language_system">Как в системе</string>
+    <string name="settings_support">Поддержка</string>
+    <string name="settings_copy_logs">Скопировать логи</string>
+    <string name="settings_logs_copied">Логи скопированы в буфер обмена</string>
+    <string name="settings_logs_empty">Логов пока нет</string>
+    <string name="settings_copy_failed">Не удалось скопировать логи</string>
+    <string name="settings_github">Проект на GitHub</string>
+    <string name="settings_github_unavailable">Нечем открыть ссылку</string>
+    <string name="settings_about">О приложении</string>
+    <string name="settings_about_text">Volna играет треки прямо из YouTube Music по сети. Без аккаунта, без рекламы, файл не сохраняется. Проект открытый, лицензия MIT.</string>
+    <string name="settings_version">Версия %1$s</string>
+    <string name="settings_open">Открыть настройки</string>
+    <string name="settings_back">Назад</string>
+    <string name="settings_license">Лицензия MIT · открытый код</string>
+
     <!-- Тема -->
     <string name="theme_light">Светлая тема</string>
     <string name="theme_dark">Тёмная тема</string>
 
     <!-- Ошибки -->
     <string name="error_no_stream">YouTube не отдаёт аудио для этого трека</string>
+    <string name="error_player_unavailable">Не удалось запустить плеер. Попробуйте ещё раз</string>
     <string name="error_retry_prompt">Поток отдаётся плохо. Нажмите «Повторить»</string>
     <string name="error_no_url">Не удалось получить ссылку на трек</string>
     <string name="error_stream_gave_up">Поток не отдаётся. Нажмите «Повторить»</string>
@@ -79,4 +108,6 @@
     <!-- Уведомление -->
     <string name="notification_channel">Воспроизведение</string>
     <string name="notification_connecting">Подключение…</string>
+    <string name="player_shuffle">Перемешать</string>
+    <string name="notice_not_in_music">В YouTube Music нет «%1$s» — ищу в видео</string>
 </resources>

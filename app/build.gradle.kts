@@ -65,6 +65,14 @@ android {
 
     buildFeatures {
         compose = true
+        // Нужно для BuildConfig.VERSION_NAME в настройках и в заголовке логов.
+        buildConfig = true
+    }
+
+    defaultConfig {
+        // Языки, которые переведены полностью: без этого в Play Store
+        // показывается весь список системных локалей устройства.
+        resourceConfigurations += setOf("en", "ru", "fr", "es", "zh", "ar")
     }
 
     testOptions {
@@ -87,6 +95,9 @@ dependencies {
 
     implementation("androidx.core:core-ktx:1.16.0")
     implementation("androidx.activity:activity-compose:1.10.1")
+    // Ради переключения языка внутри приложения: AppCompatDelegate сам
+    // пересоздаёт активности и помнит выбор на уровне процесса.
+    implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.4")

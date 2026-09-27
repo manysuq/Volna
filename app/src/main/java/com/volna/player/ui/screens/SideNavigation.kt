@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,9 +40,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layout
 import androidx.annotation.StringRes
 import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.stringResource
 
 /** Разделы приложения. */
 enum class AppTab(@StringRes val title: Int, val icon: ImageVector) {
@@ -65,6 +66,7 @@ fun SideNavigation(
     onSelect: (AppTab) -> Unit,
     isDarkTheme: Boolean,
     onToggleTheme: () -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -107,6 +109,24 @@ fun SideNavigation(
                         onClick = { onSelect(tab) },
                     )
                 }
+            }
+        }
+
+        // Настройки внизу панели: туда попадают язык, логи и ссылка на проект.
+        // Стоят неповёрнутым по той же причине, что и тема, — читаются ровно.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(vertical = 6.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            IconButton(onClick = onOpenSettings) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = stringResource(R.string.settings_open),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }

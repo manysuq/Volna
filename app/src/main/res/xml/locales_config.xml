@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Языки, которые действительно переведены. Android 13+ показывает этот список
+  в системных настройках приложения, поэтому лишние локали туда попадать не должны.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="ru" />
+    <locale android:name="fr" />
+    <locale android:name="es" />
+    <locale android:name="zh" />
+    <locale android:name="ar" />
+</locale-config>

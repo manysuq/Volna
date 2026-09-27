@@ -33,9 +33,16 @@ class StreamResolver {
                 // В URL есть itag: по нему видно, что взят именно audio-only поток
                 val itag = Regex("[?&]itag=(\\d+)").find(url)?.groupValues?.get(1) ?: "?"
                 Log.i(TAG, "Рабочая ссылка для ${track.id}: itag=$itag audio-only")
+                com.volna.player.LogBuffer.d(TAG, "ссылка получена, itag=$itag")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Не удалось получить ссылку: ${e.message}", e)
+            // itag и текст исключения — самое полезное в разборе «не играет»:
+            // по ним видно, дошло ли дело до запроса форматов вообще.
+            com.volna.player.LogBuffer.e(
+                TAG,
+                "ссылка не получена: ${e.javaClass.simpleName}: ${e.message}",
+            )
             null
         }
     }

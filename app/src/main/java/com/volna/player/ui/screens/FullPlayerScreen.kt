@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SkipNext
@@ -106,6 +107,8 @@ fun FullPlayerScreen(
     positionMs: Long,
     durationMs: Long,
     repeatMode: Int,
+    isShuffled: Boolean,
+    canShuffle: Boolean,
     downloadState: DownloadState?,
     onTogglePlay: () -> Unit,
     onSeek: (Long) -> Unit,
@@ -113,6 +116,7 @@ fun FullPlayerScreen(
     onNext: () -> Unit,
     onPrevious: () -> Unit,
     onToggleRepeat: () -> Unit,
+    onToggleShuffle: () -> Unit,
     onDownload: () -> Unit,
     onCancelDownload: () -> Unit,
     onShare: () -> Unit,
@@ -226,8 +230,11 @@ fun FullPlayerScreen(
 
             SecondaryActions(
                 repeatMode = repeatMode,
+                isShuffled = isShuffled,
+                canShuffle = canShuffle,
                 downloadState = downloadState,
                 onToggleRepeat = onToggleRepeat,
+                onToggleShuffle = onToggleShuffle,
                 onDownload = onDownload,
                 onCancelDownload = onCancelDownload,
             )
@@ -533,12 +540,15 @@ private fun PlaybackControls(
     }
 }
 
-/** Нижний ряд: скачать, повтор, ошибка/статус. */
+/** Нижний ряд: скачать, перемешать, повтор, ошибка/статус. */
 @Composable
 private fun SecondaryActions(
     repeatMode: Int,
+    isShuffled: Boolean,
+    canShuffle: Boolean,
     downloadState: DownloadState?,
     onToggleRepeat: () -> Unit,
+    onToggleShuffle: () -> Unit,
     onDownload: () -> Unit,
     onCancelDownload: () -> Unit,
 ) {
@@ -569,7 +579,10 @@ private fun SecondaryActions(
             }
         }
 
-        IconButton(onClick = onToggleRepeat, modifier = Modifier.size(48.dp)) {
+        IconButton(
+            onClick = onToggleRepeat,
+            modifier = Modifier.size(48.dp),
+        ) {
             Icon(
                 imageVector = if (repeatMode == Player.REPEAT_MODE_ONE) {
                     Icons.Filled.RepeatOne
@@ -581,6 +594,25 @@ private fun SecondaryActions(
                     MaterialTheme.colorScheme.onSurfaceVariant
                 } else {
                     MaterialTheme.colorScheme.primary
+                },
+            )
+        }
+
+        // Перемешать можно только внутри альбома: вне его мешать нечего,
+        // поэтому кнопка остаётся видимой, но неактивной — так понятнее,
+        // что режим существует, чем если её просто нет.
+        IconButton(
+            onClick = onToggleShuffle,
+            enabled = canShuffle,
+            modifier = Modifier.size(48.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Shuffle,
+                contentDescription = stringResource(R.string.player_shuffle),
+                tint = when {
+                    !canShuffle -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                    isShuffled -> MaterialTheme.colorScheme.primary
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
                 },
             )
         }

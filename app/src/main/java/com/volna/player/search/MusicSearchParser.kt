@@ -16,7 +16,11 @@ import java.util.Locale
  *  * `ANDROID_MUSIC` — `elementRenderer → newElement → … →
  *    musicListItemWrapperModel → musicListItemData`, где те же данные лежат
  *    плоско в полях `title` / `subtitle`, а `videoId` — в
- *    `onTap.innertubeCommand.watchEndpoint`.
+ *    `onTap.innertubeCommand.watchEndpoint`;
+ *  * `musicCardShelfRenderer` — карточка «лучший результат». Этот блок лежит
+ *    отдельно от списка, и в общую выдачу не попадает: без его разбора
+ *    пропадает лучшее совпадение целиком (например, «Молчанка» от Noize MC
+ *    в обычном списке выдачи не встречается).
  *
  * Поддерживаются обе схемы, а сам обход — рекурсивный: YouTube периодически
  * меняет, в какие секции упакована выдача, и жёсткий путь до узкого места
@@ -114,6 +118,7 @@ internal class MusicSearchParser(
             is JSONObject -> {
                 if (tracks.size < collectLimit) {
                     readWebRemixItem(node.optJSONObject(ITEM_WEB_REMIX))
+                    readCardShelf(node.optJSONObject(ITEM_CARD_SHELF))
                     readAndroidMusicItem(node.optJSONObject(ITEM_ANDROID_MUSIC))
                 }
                 val keys = node.keys()
@@ -151,6 +156,68 @@ internal class MusicSearchParser(
                 channel = artist,
                 durationSeconds = Track.DURATION_UNKNOWN,
                 thumbnailUrl = thumbnailOf(item.optJSONObject("thumbnail"), id),
+                videoUrl = watchUrl(id),
+                isOfficialMusic = isSong,
+                musicArtist = if (isSong) artist else "",
+                album = album,
+            ),
+        )
+    }
+
+    /**
+     * Карточка «лучший результат» — `musicCardShelfRenderer`.
+     *
+     * YouTube Music кладёт сюда одиночный трек, который он считает самым
+     * подходящим, и в общий список этот трек не попадает. Разметка плоская:
+     * `title.runs[0]` несёт и название, и `watchEndpoint.videoId`, а
+     * `subtitle.runs` — «Композиция • Исполнитель • 4:41», где последняя
+     * часть здесь длительность, а не альбом.
+     *
+     * Без этого блока пропадали лучшие совпадения целиком: например, «Молчанка»
+     * от Noize MC в обычном списке выдачи отсутствует и существует только здесь.
+     */
+    private fun readCardShelf(card: JSONObject?) {
+        if (card == null) return
+        val title = card.optJSONObject("title").let { runsText(it) }.trim()
+        if (title.isEmpty()) return
+
+        val id = card.optJSONObject("title")
+            ?.optJSONArray("runs")
+            ?.let { runs ->
+                for (i in 0 until runs.length()) {
+                    val v = runs.optJSONObject(i)
+                        ?.optJSONObject("navigationEndpoint")
+                        ?.optJSONObject("watchEndpoint")
+                        ?.optString("videoId")
+                        .orEmpty()
+                    if (isValidId(v)) return@let v
+                }
+                null
+            }
+            ?: card.optJSONObject("onTap")
+                ?.optJSONObject("watchEndpoint")
+                ?.optString("videoId")
+                .orEmpty()
+        if (!isValidId(id)) return
+
+        val subtitle = runsText(card.optJSONObject("subtitle"))
+        val isSong = kindOf(subtitle) in SONG_KINDS
+        val rest = parts(subtitle).toMutableList()
+
+        // В карточке третья часть подписи — длительность, а не название альбома.
+        val duration = rest.lastOrNull()?.let { parseDuration(it) } ?: -1
+        if (duration >= 0) rest.removeAt(rest.size - 1)
+
+        val artist = if (isSong) rest.getOrNull(1).orEmpty() else rest.firstOrNull().orEmpty()
+        val album = if (isSong) rest.getOrNull(2).orEmpty() else ""
+
+        add(
+            Track(
+                id = id,
+                title = title,
+                channel = artist,
+                durationSeconds = duration,
+                thumbnailUrl = thumbnailOf(card.optJSONObject("thumbnail"), id),
                 videoUrl = watchUrl(id),
                 isOfficialMusic = isSong,
                 musicArtist = if (isSong) artist else "",
@@ -198,6 +265,41 @@ internal class MusicSearchParser(
     /** Тип элемента: текст до первого разделителя «•», в нижнем регистре. */
     private fun kindOf(subtitle: String): String =
         subtitle.substringBefore(SEPARATOR).trim().lowercase(Locale.ROOT)
+
+    /**
+     * Текст из `simpleText` либо склейкой `runs`.
+     *
+     * У карточки и колонок списка разметка одинаковая, но у карточки
+     * разделители «•» приходят отдельными `run`, поэтому склейка должна быть
+     * без разделителя — ровно как их отдаёт YouTube.
+     */
+    private fun runsText(node: JSONObject?): String {
+        if (node == null) return ""
+        node.optString("simpleText").takeIf { it.isNotEmpty() }?.let { return it }
+        val runs = node.optJSONArray("runs") ?: return ""
+        return buildString {
+            for (i in 0 until runs.length()) {
+                runs.optJSONObject(i)?.optString("text")?.let { append(it) }
+            }
+        }
+    }
+
+    /**
+     * «4:41» → 281 секунда, «1:02:03» → 3723. Не длительность → [DURATION_UNKNOWN].
+     *
+     * Нужна, чтобы отличить третью часть подписи карточки (время) от названия
+     * альбома в обычном пункте списка, где третьей частью может быть что угодно.
+     */
+    private fun parseDuration(value: String): Int {
+        val text = value.trim()
+        if (!DURATION.matches(text)) return Track.DURATION_UNKNOWN
+        val parts = text.split(':')
+        val seconds = parts.last().toIntOrNull() ?: return Track.DURATION_UNKNOWN
+        val minutes = parts.getOrNull(parts.size - 2)?.toIntOrNull() ?: return Track.DURATION_UNKNOWN
+        val hours = if (parts.size > 2) parts[0].toIntOrNull() ?: 0 else 0
+        if (minutes > 59 || seconds > 59) return Track.DURATION_UNKNOWN
+        return hours * 3600 + minutes * 60 + seconds
+    }
 
     /** Части подписи, разделённые «•», без пустых. */
     private fun parts(subtitle: String): List<String> =
@@ -260,6 +362,7 @@ internal class MusicSearchParser(
         private const val TAG = "YouTubeMusicSearch"
 
         private const val ITEM_WEB_REMIX = "musicResponsiveListItemRenderer"
+        private const val ITEM_CARD_SHELF = "musicCardShelfRenderer"
         private const val ITEM_ANDROID_MUSIC = "musicListItemWrapperModel"
         private const val ITEM_DATA = "musicListItemData"
         private const val FLEX_COLUMN = "musicResponsiveListItemFlexColumnRenderer"
@@ -286,6 +389,9 @@ internal class MusicSearchParser(
         private val NON_LETTER = Regex("[^a-zа-я0-9]+")
         private val SPACES = Regex("\\s+")
         private val ID = Regex("^[A-Za-z0-9_-]{11}$")
+
+        /** «мм:сс» или «ч:мм:сс» — иначе это не длительность. */
+        private val DURATION = Regex("^\\d{1,2}:\\d{2}(:\\d{2})?$")
 
         private const val MAX_DEPTH = 40
         private const val MAX_NODES = 200_000

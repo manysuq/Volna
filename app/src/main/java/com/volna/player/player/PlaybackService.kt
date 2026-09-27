@@ -20,6 +20,7 @@ import androidx.media3.datasource.HttpDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
+import androidx.media3.datasource.DataSource
 import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
@@ -32,6 +33,7 @@ import java.io.File
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import javax.net.ssl.SSLException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -77,10 +79,14 @@ class PlaybackService : MediaSessionService() {
             .setAllowCrossProtocolRedirects(true)
             .setConnectTimeoutMs(CONNECT_TIMEOUT_MS)
             .setReadTimeoutMs(READ_TIMEOUT_MS)
-            // YouTube не любит пустое тело: всегда шлём Range
             .setDefaultRequestProperties(mapOf("Accept" to "*/*"))
 
-        val upstream = DefaultDataSource.Factory(this, httpFactory)
+        // Заголовки упаковываем сами: Range нельзя задать через
+        // setDefaultRequestProperties — ExoPlayer перетирает его своим, а при
+        // первом открытии файла не формирует вовсе. Из-за этого YouTube
+        // отвечал 403, и трек начинал играть только с третьей попытки.
+        val rangedFactory = DataSource.Factory { RangeDataSource(httpFactory.createDataSource()) }
+        val upstream = DefaultDataSource.Factory(this, rangedFactory)
         val cacheFactory = CacheDataSource.Factory()
             .setCache(cache)
             .setUpstreamDataSourceFactory(upstream)
@@ -105,6 +111,13 @@ class PlaybackService : MediaSessionService() {
     private val playerListener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             _buffering.value = playbackState == Player.STATE_BUFFERING
+            // Трек доиграл: сообщаем ViewModel, он возьмёт следующий сам.
+            // Вместе с состоянием отдаём id доигравшего трека: событие может
+            // прийти уже после того, как нажали другой трек, и без проверки
+            // оно уводило бы воспроизведение не туда.
+            if (playbackState == Player.STATE_ENDED) {
+                _trackFinished.tryEmit(exoPlayer?.currentMediaItem?.mediaId)
+            }
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
@@ -120,23 +133,38 @@ class PlaybackService : MediaSessionService() {
         override fun onPlayerError(error: PlaybackException) {
             val reason = describe(this@PlaybackService, error)
             Log.e(TAG, "Воспроизведение оборвалось: $reason", error)
+            // В буфер кладём и текст ошибки, и её код: по одному тексту
+            // понять причину нельзя, коды у Media3 различают близкие случаи.
+            com.volna.player.LogBuffer.e(
+                "PlaybackService",
+                "обрыв: $reason, код=${error.errorCodeName}, uri=${error.localizedMessage}",
+            )
             _buffering.value = false
             _isPlayingState.value = false
             _error.value = reason
-            // Сигнал на переподключение: ссылка могла протухнуть или сеть моргнула
-            _faults.tryEmit(Unit)
+            // Переподключение имеет смысл только для «поток сломался»:
+            // протухшая ссылка и сетевой сбок лечатся новой ссылкой, а 403 —
+            // нет. Раньше он тоже уходил в переподключение, отсюда было
+            // ощущение, что play надо нажимать несколько раз.
+            if (!isForbidden(error)) {
+                _faults.tryEmit(Unit)
+            }
         }
     }
 
     /**
      * Media3 уходит в foreground только когда воспроизведение реально
      * стартовало. Но система требует startForeground() в течение 5 секунд
-     * после startForegroundService(), поэтому показываем своё уведомление
-     * сразу; Media3 перезапишет его, когда начнёт играть.
+     * после startForegroundService(), поэтому заглушечный вызов нужен.
+     *
+     * Само уведомление показываем не всегда: сервис поднимается заранее
+     * (при запуске приложения, ради готовности плеера), и постоянная надпись
+     * «Подключение…» висела бы в шторке даже когда ничего не играет.
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val result = super.onStartCommand(intent, flags, startId)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        val hasQueue = (exoPlayer?.mediaItemCount ?: 0) > 0
+        if (hasQueue && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NOTIFICATION_ID, buildPlaceholderNotification())
         }
         return result
@@ -188,8 +216,13 @@ class PlaybackService : MediaSessionService() {
         private const val NOTIFICATION_CHANNEL_ID = "ytdl_playback"
         private const val NOTIFICATION_ID = 1001
         private const val MAX_CACHE_BYTES = 256L * 1024 * 1024
+        private const val HTTP_FORBIDDEN = 403
         private const val CONNECT_TIMEOUT_MS = 15_000
         private const val READ_TIMEOUT_MS = 20_000
+
+        /** Сколько ждём подъёма сервиса: 40 попыток по 50 мс — около 2 секунд. */
+        private const val PLAYER_WAIT_ATTEMPTS = 40
+        private const val PLAYER_WAIT_STEP_MS = 50L
 
         private var instance: PlaybackService? = null
 
@@ -207,9 +240,26 @@ class PlaybackService : MediaSessionService() {
         private val _error = MutableStateFlow<String?>(null)
         val error: StateFlow<String?> = _error.asStateFlow()
 
-        /** Короткий сигнал «поток упал, переподключись сам». */
+        /**
+         * Короткий сигнал «поток упал, переподключись сам».
+         *
+         * Сюда не попадает 403: он означает «сервер отказал», а не «поток
+         * сломался», и новая ссылка его не исправит. Раньше 403 уходил в
+         * переподключение, и трек «начинал играть» с третьего нажатия —
+         * на самом деле это был обход запроса без заголовка Range.
+         */
         private val _faults = MutableSharedFlow<Unit>(extraBufferCapacity = 4)
         val faults: SharedFlow<Unit> = _faults.asSharedFlow()
+
+        /**
+         * Трек доиграл до конца.
+         *
+         * Без этого сигнала песня просто останавливалась. Очередь ExoPlayer
+         * состоит из одного MediaItem (следующий трек ViewModel ставит сам,
+         * уже разобрав ссылку), поэтому переключаться дальше некому.
+         */
+        private val _trackFinished = MutableSharedFlow<String?>(extraBufferCapacity = 4)
+        val trackFinished: SharedFlow<String?> = _trackFinished.asSharedFlow()
 
         /** mediaId текущего MediaItem: обновляется при автопереходе очереди. */
         private val _currentMediaId = MutableStateFlow<String?>(null)
@@ -261,16 +311,20 @@ class PlaybackService : MediaSessionService() {
 
         fun player(context: Context): ExoPlayer? = instance?.exoPlayer
 
-        /** Ждёт создания ExoPlayer: сервис поднимается асинхронно. */
-        private fun awaitPlayer(context: Context): ExoPlayer? {
-            repeat(40) {                       // до ~2 секунд
+        /**
+         * Ждёт создания ExoPlayer: сервис поднимается асинхронно.
+         *
+         * Именно suspend с [delay], а не цикл с `Thread.sleep`: вызывается с
+         * главного потока, и блокирующий сон не дал бы на нём же выполниться
+         * `onCreate` сервиса — тот тоже живёт на main-потоке. Получалась
+         * взаимоблокировка: первый тап всегда ждал 2 секунды и уходил с
+         * «плеер не поднялся», а второй уже работал, потому что сервис к тому
+         * моменту успевал подняться.
+         */
+        private suspend fun awaitPlayer(): ExoPlayer? {
+            repeat(PLAYER_WAIT_ATTEMPTS) {            // до ~2 секунд
                 instance?.exoPlayer?.let { return it }
-                try {
-                    Thread.sleep(50)
-                } catch (e: InterruptedException) {
-                    Thread.currentThread().interrupt()
-                    return null
-                }
+                delay(PLAYER_WAIT_STEP_MS)
             }
             return instance?.exoPlayer
         }
@@ -279,19 +333,37 @@ class PlaybackService : MediaSessionService() {
          * Стрим трек по прямой ссылке. Ссылка [url] должна быть получена
          * недавно: у YouTube она живёт ограниченное время.
          */
-        fun playStream(context: Context, track: Track, url: String, queue: List<Pair<Track, String>>) {
+        suspend fun playStream(context: Context, track: Track, url: String, queue: List<Pair<Track, String>>) {
             ensureStarted(context)
-            val player = awaitPlayer(context) ?: run {
-                Log.w(TAG, "Плеер не поднялся, стрим не запущен")
+            val player = awaitPlayer()
+            if (player == null) {
+                val message = context.getString(R.string.error_player_unavailable)
+                Log.w(TAG, "Плеер не поднялся, стрим не запущен: $message")
+                _error.value = message
                 return
             }
             _error.value = null
             _currentMediaId.value = track.id
+            // Длительность и исполнителя кладём, сам id — нет: он бесполезен
+            // для читателя отчёта и является лишней ссылкой на трек.
+            com.volna.player.LogBuffer.d(
+                "PlaybackService",
+                "старт: «${track.title}» (${track.musicArtist}), в очереди ${queue.size}",
+            )
             val items = queue.map { (item, itemUrl) -> buildItem(item, itemUrl) }
             val index = queue.indexOfFirst { (item, _) -> item.id == track.id }.coerceAtLeast(0)
             player.setMediaItems(items, index, 0L)
             player.prepare()
             player.playWhenReady = true
+            // Заглушку ставим здесь, а не в onStartCommand: к этому моменту
+            // очередь уже непустая, и надпись «Подключение…» исчезнет ровно
+            // тогда, когда Media3 возьмёт управление уведомлением на себя.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Функция живёт в companion, а уведомление — метод сервиса.
+                instance?.run {
+                    startForeground(NOTIFICATION_ID, buildPlaceholderNotification())
+                }
+            }
         }
 
         /** Добавляет трек в конец очереди, не прерывая текущий. */
@@ -320,16 +392,29 @@ class PlaybackService : MediaSessionService() {
             player.seekTo((player.currentPosition + deltaMs).coerceIn(0L, limit))
         }
 
-        /** Режим повтора: OFF → ALL → ONE → OFF. */
-        fun cycleRepeatMode(context: Context): Int {
-            val player = player(context) ?: return Player.REPEAT_MODE_OFF
-            val next = when (player.repeatMode) {
-                Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
-                Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
-                else -> Player.REPEAT_MODE_OFF
+        /** Ставит режим повтора: OFF / ALL / ONE. */
+        fun setRepeatMode(context: Context, mode: Int) {
+            player(context)?.repeatMode = mode
+        }
+
+        /**
+         * Отказ сервера (403), а не обрыв потока.
+         *
+         * Причина лежит в цепочке исключений, а не на верхнем уровне, поэтому
+         * ищем по всей. 403 означает, что сервер не даст данные и с новой
+         * ссылкой, — переподключение тут только тратит время.
+         */
+        private fun isForbidden(error: Throwable): Boolean {
+            var cause: Throwable? = error
+            while (cause != null) {
+                if (cause is HttpDataSource.InvalidResponseCodeException &&
+                    cause.responseCode == HTTP_FORBIDDEN
+                ) {
+                    return true
+                }
+                cause = cause.cause
             }
-            player.repeatMode = next
-            return next
+            return false
         }
 
         private fun buildItem(track: Track, url: String): MediaItem =

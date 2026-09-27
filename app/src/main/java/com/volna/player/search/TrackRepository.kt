@@ -8,18 +8,53 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 /**
+ * Что ищем: музыкальные треки или обычные видео.
+ *
+ * Раньше режим был один, и это создавало неудобство: запрос «ремикс» вёл
+ * в подборку видео, хотя человек искал версию песни. Разделение делает
+ * намерение явным — переключатель стоит прямо над полем поиска.
+ */
+enum class SearchMode {
+    /** Каталог YouTube Music: только официальные треки, с исполнителем и альбомом. */
+    Tracks,
+
+    /** Обычный YouTube: всё подряд, включая видео и концерты. */
+    Videos;
+
+    companion object {
+        private const val PREFS = "ytdl_prefs"
+        private const val KEY = "search_mode"
+
+        fun load(context: android.content.Context): SearchMode {
+            val raw = context.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE)
+                .getString(KEY, null) ?: return Tracks
+            return entries.firstOrNull { it.name == raw } ?: Tracks
+        }
+
+        fun save(context: android.content.Context, mode: SearchMode) {
+            context.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE)
+                .edit().putString(KEY, mode.name).apply()
+        }
+    }
+}
+
+/**
  * Стратегия поиска: сперва YouTube Music, затем обычный YouTube.
  *
  * YouTube Music отдаёт официальные треки с исполнителем и альбомом уже в
  * подписи, поэтому выдача заметно чище. Но он покрывает не всё: редких треков
  * в его каталоге нет, и запрос может не дать ни одной «Композиции». Тогда
  * берём обычный поиск YouTube — он найдёт больше, раз и сам отсеет мусор.
+ *
+ * В режиме [SearchMode.Videos] YTM не спрашиваем вовсе: человек искал видео,
+ * а не треки, и подмешивать музыкальные результаты незачем.
  */
 internal class FallbackSearch(
     private val primary: YouTubeMusicSearch = YouTubeMusicSearch(),
     private val fallback: YouTubeSearch = YouTubeSearch(),
 ) {
-    suspend fun search(query: String, limit: Int): List<Track> {
+    suspend fun search(query: String, limit: Int, mode: SearchMode = SearchMode.Tracks): List<Track> {
+        if (mode == SearchMode.Videos) return fallback.search(query, limit)
         val music = primary.search(query, limit)
         if (music.size >= MIN_RESULTS) return music
 
@@ -82,13 +117,13 @@ internal class TrackRepository(
     private val generation = java.util.concurrent.atomic.AtomicLong(0)
 
     /**
-     * Выполняет поиск по [query] и обновляет [state].
+     * Выполняет поиск по [query] в режиме [mode] и обновляет [state].
      *
      * Не бросает исключений: ошибка попадает в [TrackState.error].
      * Отмена корутины (CancellationException) пробрасывается и при этом
      * снимает флаг загрузки.
      */
-    suspend fun doSearch(query: String) {
+    suspend fun doSearch(query: String, mode: SearchMode = SearchMode.Tracks) {
         val cleanQuery = query.trim()
         if (cleanQuery.isEmpty()) {
             clear()
@@ -97,9 +132,16 @@ internal class TrackRepository(
 
         val myGeneration = generation.incrementAndGet()
         _state.update { it.copy(isLoading = true, error = null) }
+        // Запрос целиком не пишем: он может содержать то, что человек не хотел
+        // бы показывать. Для диагностики хватает режима и числа символов.
+        com.volna.player.LogBuffer.d(
+            TAG,
+            "поиск: ${cleanQuery.length} симв., режим=$mode, поколение=$myGeneration",
+        )
 
         try {
-            val result = searcher.search(cleanQuery, limit)
+            val result = searcher.search(cleanQuery, limit, mode)
+            com.volna.player.LogBuffer.d(TAG, "найдено: ${result.size}")
             if (generation.get() != myGeneration) {
                 Log.d(TAG, "Результат устаревшего запроса «$cleanQuery» отброшен")
                 return

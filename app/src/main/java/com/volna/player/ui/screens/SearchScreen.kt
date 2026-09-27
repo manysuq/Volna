@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,6 +39,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.volna.player.download.DownloadProgress
+import com.volna.player.search.SearchMode
 import com.volna.player.search.Track
 import com.volna.player.search.TrackState
 import androidx.compose.ui.res.stringResource
@@ -50,6 +53,8 @@ fun SearchScreen(
     state: TrackState,
     progressMap: Map<String, DownloadProgress>,
     currentTrackId: String?,
+    mode: SearchMode,
+    onModeChange: (SearchMode) -> Unit,
     onQueryChange: (String) -> Unit,
     onDownload: (Track) -> Unit,
     onCancelDownload: (String) -> Unit,
@@ -59,9 +64,14 @@ fun SearchScreen(
     val keyboard = LocalSoftwareKeyboardController.current
 
     Column(modifier = modifier.fillMaxSize()) {
+        // Переключатель режима стоит над полем: выбор «что ищем» влияет на
+        // всю выдачу, и прятать его в меню незачем.
+        SearchModeSwitcher(mode = mode, onModeChange = onModeChange)
+
         SearchField(
             query = query,
             isLoading = state.isLoading,
+            mode = mode,
             onQueryChange = onQueryChange,
             onSearch = { keyboard?.hide() },
         )
@@ -82,10 +92,60 @@ fun SearchScreen(
     }
 }
 
+/**
+ * Переключатель «треки / видео».
+ *
+ * Две кнопки, а не выпадающий список: вариантов ровно два, и менять режим
+ * нужно часто — набирать запрос заново не хочется.
+ */
+@Composable
+private fun SearchModeSwitcher(
+    mode: SearchMode,
+    onModeChange: (SearchMode) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        SearchMode.entries.forEach { option ->
+            val selected = option == mode
+            val label = stringResource(
+                when (option) {
+                    SearchMode.Tracks -> R.string.search_mode_tracks
+                    SearchMode.Videos -> R.string.search_mode_videos
+                },
+            )
+            Surface(
+                onClick = { onModeChange(option) },
+                shape = MaterialTheme.shapes.extraLarge,
+                color = if (selected) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainerHigh
+                },
+                contentColor = if (selected) {
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun SearchField(
     query: String,
     isLoading: Boolean,
+    mode: SearchMode,
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
 ) {
@@ -95,7 +155,12 @@ private fun SearchField(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp),
-        placeholder = { stringResource(R.string.search_hint) },
+        placeholder = {
+            stringResource(
+                if (mode == SearchMode.Tracks) R.string.search_hint
+                else R.string.search_hint_video,
+            )
+        },
         leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
         trailingIcon = {
             if (query.isNotEmpty()) {

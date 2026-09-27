@@ -200,6 +200,99 @@ class MusicSearchParserTest {
     }
 
     /**
+     * Карточка «лучший результат» из настоящего ответа InnerTube.
+     *
+     * Регрессия: «Молчанка» от Noize MC в общем списке выдачи не встречается,
+     * она лежит только в `musicCardShelfRenderer`. Пока этот блок не разбирался,
+     * подбирался чужой трек — «Безмозглая музыка», у которого совпал исполнитель.
+     */
+    @Test
+    fun `разбирает карточку лучшего результата`() {
+        val tracks = MusicSearchParser(limit = 10, query = "молчанка noize mc")
+            .parse(fixture("fx_webremix_card.json"))
+
+        val card = tracks.firstOrNull { it.id == "9o3B03nztsY" }
+        assertTrue("карточка «Молчанка» должна попасть в выдачу", card != null)
+        card!!
+        assertEquals("Молчанка", card.title)
+        assertEquals("Noize MC", card.channel)
+        assertTrue("карточка помечена как официальный трек", card.isOfficialMusic)
+        assertEquals("https://www.youtube.com/watch?v=9o3B03nztsY", card.videoUrl)
+    }
+
+    /**
+     * Регрессия: подпись карточки — «Композиция • Исполнитель • 4:41».
+     * Третья часть здесь длительность, а не альбом, как в обычном пункте списка.
+     */
+    @Test
+    fun `в карточке третья часть подписи это длительность а не альбом`() {
+        val card = MusicSearchParser(limit = 10, query = "молчанка noize mc")
+            .parse(fixture("fx_webremix_card.json"))
+            .first { it.id == "9o3B03nztsY" }
+
+        assertEquals(281, card.durationSeconds)
+        assertTrue("длительность должна быть известна", card.hasKnownDuration)
+        assertEquals("4:41", card.formattedDuration())
+        assertEquals("длительность не должна попасть в альбом", "", card.album)
+    }
+
+    /** Карточка — лучшее совпадение, и подбор обязан поставить её первой. */
+    @Test
+    fun `карточка побеждает похожие треки того же исполнителя`() {
+        val tracks = MusicSearchParser(limit = 10, query = "молчанка noize mc")
+            .parse(fixture("fx_webremix_card.json"))
+
+        assertEquals("9o3B03nztsY", tracks.first().id)
+        assertTrue(
+            "точный запрос не должен уводить на «${tracks.first().title}»",
+            tracks.first().title.equals("Молчанка", ignoreCase = true),
+        )
+    }
+
+    /** Разделители «•» в карточке приходят отдельными run — склейка обязана их сохранить. */
+    @Test
+    fun `склейка runs сохраняет разделители подписи`() {
+        val runs = org.json.JSONArray()
+            .put(JSONObject().put("text", "Композиция"))
+            .put(JSONObject().put("text", " • "))
+            .put(JSONObject().put("text", "Noize MC"))
+            .put(JSONObject().put("text", " • "))
+            .put(JSONObject().put("text", "4:41"))
+
+        val node = JSONObject()
+            .put(
+                "musicCardShelfRenderer",
+                JSONObject()
+                    .put(
+                        "title",
+                        JSONObject().put("runs", org.json.JSONArray().put(JSONObject().put("text", "Молчанка"))),
+                    )
+                    .put("subtitle", JSONObject().put("runs", runs))
+                    .put(
+                        "onTap",
+                        JSONObject()
+                            .put("watchEndpoint", JSONObject().put("videoId", "9o3B03nztsY")),
+                    ),
+            )
+
+        val track = MusicSearchParser(limit = 5, query = "молчанка").parse(node).single()
+        assertEquals("Молчанка", track.title)
+        assertEquals("Noize MC", track.channel)
+        assertEquals(281, track.durationSeconds)
+    }
+
+    /** Альбом в подписи не должен приниматься за длительность. */
+    @Test
+    fun `название альбома не путается с длительностью`() {
+        val track = MusicSearchParser(limit = 5, query = "Кино")
+            .parse(item("EByofhvVRco", "Группа крови", "Композиция • Кино • Детский"))
+            .single()
+
+        assertEquals("Детский", track.album)
+        assertFalse("длительность остаётся неизвестной", track.hasKnownDuration)
+    }
+
+    /**
      * Элемент выдачи в вёрстке `WEB_REMIX`: [subtitle] идёт «Тип • Исполнитель • Альбом».
      * Пустой [id] имитирует альбом или плейлист — играть из них нечего.
      */
