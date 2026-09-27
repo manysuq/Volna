@@ -6,6 +6,11 @@
 
 # Volna
 
+<p align="center">
+  <a href="https://github.com/manysuq/Volna/releases/tag/v1.0"><img alt="⬇ Download" src="https://img.shields.io/badge/v1.0-⬇%20Download-2ea44f?style=for-the-badge"></a>
+</p>
+
+
 **VIBECODED**
 
 A calm music player for Android. It searches **YouTube Music** and streams the

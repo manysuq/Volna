@@ -6,6 +6,11 @@
 
 # Volna
 
+<p align="center">
+  <a href="https://github.com/manysuq/Volna/releases/tag/v1.0"><img alt="⬇ Спампаваць" src="https://img.shields.io/badge/v1.0-⬇%20Спампаваць-2ea44f?style=for-the-badge"></a>
+</p>
+
+
 **VIBECODED**
 
 Спакойны музычны прайгравач для Android. Шукае трекі ў **YouTube Music** і

@@ -6,6 +6,11 @@
 
 # Volna
 
+<p align="center">
+  <a href="https://github.com/manysuq/Volna/releases/tag/v1.0"><img alt="⬇ 下载" src="https://img.shields.io/badge/v1.0-⬇%20下载-2ea44f?style=for-the-badge"></a>
+</p>
+
+
 **VIBECODED**
 
 一款安静的 Android 音乐播放器。它在 **YouTube Music** 中搜索并直接串流音频 ——

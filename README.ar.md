@@ -6,6 +6,11 @@
 
 # Volna
 
+<p align="center">
+  <a href="https://github.com/manysuq/Volna/releases/tag/v1.0"><img alt="⬇ تنزيل" src="https://img.shields.io/badge/v1.0-⬇%20تنزيل-2ea44f?style=for-the-badge"></a>
+</p>
+
+
 **VIBECODED**
 
 مشغّل موسيقى هادئ لأندرويد. يبحث في **YouTube Music** ويبث الصوت مباشرة — بلا

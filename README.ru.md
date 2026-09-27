@@ -6,6 +6,11 @@
 
 # Volna
 
+<p align="center">
+  <a href="https://github.com/manysuq/Volna/releases/tag/v1.0"><img alt="⬇ Скачать" src="https://img.shields.io/badge/v1.0-⬇%20Скачать-2ea44f?style=for-the-badge"></a>
+</p>
+
+
 **VIBECODED**
 
 Мягкий музыкальный плеер для Android. Ищет треки в **YouTube Music** и стримит
