@@ -8,9 +8,13 @@ the paths must stay exactly as they are.
 | `01-similar-light.jpg` | Similar tracks list, light theme |
 | `02-search-dark.jpg` | Search results with the Tracks/Videos switch, dark theme |
 | `03-player-dark.jpg` | Now playing screen |
-| `04-library-light.jpg` | Library: liked, downloaded, playlists |
-| `05-artist-dark.jpg` | Artist page with the album grid |
-| `06-search-empty-dark.jpg` | Empty search state |
+| `04-artist-dark.jpg` | Artist page with the album grid |
+| `05-search-empty-dark.jpg` | Empty search state |
+
+There is deliberately no screenshot of the library screen. It is the one place
+where a downloaded track is visible with its title and artist, and a README
+needs no evidence that the app can save files — the feature is listed in
+Features and works all the same.
 
 ## Replacing them
 

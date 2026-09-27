@@ -31,17 +31,13 @@
     <p align="center"><sub>Зараз гульвае</sub></p>
   </td>
   <td width="50%" valign="top">
-    <img src="docs/screenshots/04-library-light.jpg" alt="04-library" width="100%">
-    <p align="center"><sub>Медыятэка</sub></p>
+    <img src="docs/screenshots/04-artist-dark.jpg" alt="04-artist" width="100%">
+    <p align="center"><sub>Выканаўца</sub></p>
   </td>
   </tr>
   <tr>
   <td width="50%" valign="top">
-    <img src="docs/screenshots/05-artist-dark.jpg" alt="05-artist" width="100%">
-    <p align="center"><sub>Выканаўца</sub></p>
-  </td>
-  <td width="50%" valign="top">
-    <img src="docs/screenshots/06-search-empty-dark.jpg" alt="06-empty" width="100%">
+    <img src="docs/screenshots/05-search-empty-dark.jpg" alt="05-empty" width="100%">
     <p align="center"><sub>Пуста</sub></p>
   </td>
   </tr>
