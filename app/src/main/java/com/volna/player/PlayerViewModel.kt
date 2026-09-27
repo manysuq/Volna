@@ -14,6 +14,7 @@ import com.volna.player.download.DownloadProgress
 import com.volna.player.player.ArtistQueue
 import com.volna.player.player.PlaybackService
 import com.volna.player.player.ReconnectPolicy
+import com.volna.player.player.StreamSession
 import com.volna.player.search.Track
 import com.volna.player.search.RecommendationClient
 import com.volna.player.search.SearchMode
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlin.random.Random
 
 /**
@@ -222,23 +224,23 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             // Резолвим только текущий трек: предзагрузка всей очереди
             // занимала секунды и откладывала начало playback.
-            val url = resolver.resolve(track)
+            val resolved = resolver.resolve(track)
             if (myGeneration != playGeneration) return@launch // тапнули другой трек
-            if (url == null) {
+            if (resolved == null) {
                 _streamState.value = StreamState.Error(getApplication<Application>().getString(R.string.error_no_url))
                 return@launch
             }
-            startPlayback(track, url)
+            startPlayback(track, resolved.url, userAgent = resolved.userAgent)
             loadRecommendations(track)
 
             // Остальные треки подтягиваем уже во время игры — по одному,
             // чтобы следующий был готов к моменту переключения.
             for (next in rest.take(QUEUE_PRELOAD)) {
                 if (myGeneration != playGeneration) return@launch
-                val nextUrl = resolver.resolve(next)
-                if (nextUrl != null && myGeneration == playGeneration) {
-                    streamQueue.add(next to nextUrl)
-                    PlaybackService.appendToQueue(getApplication(), next, nextUrl)
+                val nextResolved = resolver.resolve(next)
+                if (nextResolved != null && myGeneration == playGeneration) {
+                    streamQueue.add(next to nextResolved.url)
+                    PlaybackService.appendToQueue(getApplication(), next, nextResolved.url)
                 }
             }
         }
@@ -250,6 +252,8 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         url: String,
         resetQueue: Boolean = true,
         resumeMs: Long = 0L,
+        userAgent: String? = null,
+        linkRotates: Boolean = true,
     ) {
         currentUrl = url
         if (resetQueue) {
@@ -258,10 +262,11 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             val index = streamQueue.indexOfFirst { it.first.id == track.id }
             if (index >= 0) streamQueue[index] = track to url else streamQueue.add(0, track to url)
         }
+        if (linkRotates) attachRotatingLink(track, url)
         PlaybackService.playStream(
             getApplication(), track, url,
             streamQueue.toList(),
-            resumeMs,
+            resumeMs, userAgent,
         )
         _playbackError.value = null
         _streamState.value = StreamState.Ready
@@ -298,9 +303,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                     "переподключение №$attempt: «${track.title}»",
                 )
                 delay(ReconnectPolicy.delayMs(attempt))
-                val url = resolver.resolve(track)
-                if (url != null) {
-                    startPlayback(track, url, resetQueue = false)
+                val resolved = resolver.resolve(track)
+                if (resolved != null) {
+                    startPlayback(track, resolved.url, resetQueue = false, userAgent = resolved.userAgent)
                     return@launch
                 }
                 com.volna.player.LogBuffer.e(
@@ -432,6 +437,38 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         refreshSaved()
     }
 
+    /**
+     * Разрешает источнику данных брать свежую ссылку на ходу.
+     *
+     * Ссылка выдаётся с ограничением по объёму, и на середине трека YouTube
+     * начинает отдавать 403. Раньше ошибка доходила до плеера, и трек
+     * начинался заново — слышно было и паузу, и повтор. Теперь источник сам
+     * меняет ссылку и продолжает с той же позиции.
+     *
+     * [runBlocking] здесь не изящно, но вынужденно: источник данных
+     * работает на потоке загрузки ExoPlayer и опрашивает адрес синхронно.
+     * Блокируется именно этот поток, а не главный, так что интерфейс не
+     * замирает. Изменения состояния идут с главного потока.
+     */
+    private fun attachRotatingLink(track: Track, url: String) {
+        val session = StreamSession(
+            refreshBlocking = {
+                val fresh = runBlocking { resolver.resolve(track) }
+                if (fresh == null) {
+                    LogBuffer.d("PlayerViewModel", "свежую ссылку взять не удалось")
+                    null
+                } else {
+                    LogBuffer.d(
+                        "PlayerViewModel",
+                        "ссылка обновлена на ходу: «${track.title}»",
+                    )
+                    fresh.url
+                }
+            },
+        ).also { it.adopt(url) }
+        PlaybackService.attachStreamSession(session)
+    }
+
     /** Готовая ссылка на трек в YouTube для «Поделиться». */
     fun savedSourceUrl(trackId: String): String =
         downloads.store.find(trackId)?.sourceUrl
@@ -491,15 +528,18 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
      */
     private fun recoverFromStall(track: Track, positionMs: Long) {
         viewModelScope.launch {
-            val url = resolver.resolve(track)
-            if (url == null) {
+            val resolved = resolver.resolve(track)
+            if (resolved == null) {
                 com.volna.player.LogBuffer.e(
                     "PlayerViewModel",
                     "зависание: ссылку взять не удалось, ждём дальше",
                 )
                 return@launch
             }
-            startPlayback(track, url, resetQueue = false, resumeMs = positionMs)
+            startPlayback(
+                track, resolved.url, resetQueue = false,
+                resumeMs = positionMs, userAgent = resolved.userAgent,
+            )
         }
     }
 

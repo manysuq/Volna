@@ -234,13 +234,23 @@ internal object CatalogMatch {
         return b.all { it in a } && a.count { it in b } >= (a.size * 2) / 3
     }
 
-    /** Слова длиннее двух букв: «the», «и», «feat» нам не нужны. */
-    private fun tokens(value: String): Set<String> =
-        value.lowercase(Locale.ROOT)
+    /**
+     * Слова длиннее двух букв: «the», «и», «feat» нам не нужны.
+     *
+     * Исключение — названия, где коротких слов больше нет. «26.04» состоит
+     * из двух двузначных чисел, и после отсечения не остаётся ничего: подбор
+     * не находит трек, который в каталоге есть и в выдаче лежит первым же.
+     * Поэтому если фильтр съел всё, берём слова как есть — иначе название
+     * из цифр просто не с чем сравнивать.
+     */
+    private fun tokens(value: String): Set<String> {
+        val parts = value.lowercase(Locale.ROOT)
             .replace('ё', 'е')
             .split(Regex("[^a-zа-я0-9]+"))
-            .filter { it.length > 2 }
-            .toSet()
+            .filter { it.isNotEmpty() }
+        val long = parts.filter { it.length > 2 }.toSet()
+        return if (long.isEmpty()) parts.toSet() else long
+    }
 
     private const val TAG = "CatalogMatch"
 }

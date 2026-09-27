@@ -25,6 +25,14 @@ import java.io.IOException
  */
 internal class RangeDataSource(
     private val upstream: DataSource,
+    /**
+     * Какой User-Agent сейчас открывать ссылки.
+     *
+     * Нужен потому, что подпись ссылки привязана к InnerTube-клиенту, который
+     * её выдал. Пока User-Agent был зашит в DataSource один на всё приложение,
+     * ссылка от другого клиента открывалась чужим — и получала 403.
+     */
+    private val userAgent: StreamUserAgent,
 ) : DataSource {
 
     override fun addTransferListener(transferListener: TransferListener) {
@@ -32,8 +40,10 @@ internal class RangeDataSource(
     }
 
     override fun open(dataSpec: DataSpec): Long {
+        var headers = StreamHeaders.withRange(dataSpec.httpRequestHeaders)
+        userAgent.value?.let { headers = headers + (StreamHeaders.USER_AGENT to it) }
         val patched = dataSpec.buildUpon()
-            .setHttpRequestHeaders(StreamHeaders.withRange(dataSpec.httpRequestHeaders))
+            .setHttpRequestHeaders(headers)
             .build()
         return upstream.open(patched)
     }

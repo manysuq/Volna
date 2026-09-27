@@ -101,11 +101,24 @@ public final class InnerTubeClient {
                 continue;
             }
             if (isPlayable(response)) {
+                // Запоминаем, кто именно ответил. Подпись ссылки на поток
+                // привязана к этому клиенту, и открывать её нужно его же
+                // User-Agent'ом. Ссылка от ANDROID_VR, открытая как ANDROID,
+                // даёт 403 — и потерять клиента здесь означает гадать,
+                // откуда взялся отказ.
+                lastProfile = profile;
                 return response;
             }
-            lastReason = reasonOf(response);
+            lastReason = profile.name + ": " + reasonOf(response);
         }
         throw new YtDlpException("Не удалось получить информацию о видео: " + lastReason);
+    }
+
+    private ClientProfile lastProfile;
+
+    /** Клиент, чей ответ оказался последним принятым. */
+    public ClientProfile lastProfile() {
+        return lastProfile;
     }
 
     private Map<String, Object> fetch(String videoId, ClientProfile profile) throws IOException {

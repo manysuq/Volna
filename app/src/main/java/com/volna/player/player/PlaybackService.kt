@@ -99,8 +99,18 @@ class PlaybackService : MediaSessionService() {
         // setDefaultRequestProperties — ExoPlayer перетирает его своим, а при
         // первом открытии файла не формирует вовсе. Из-за этого YouTube
         // отвечал 403, и трек начинал играть только с третьей попытки.
-        val rangedFactory = DataSource.Factory { RangeDataSource(httpFactory.createDataSource()) }
-        val upstream = DefaultDataSource.Factory(this, rangedFactory)
+        val rangedFactory = DataSource.Factory { RangeDataSource(httpFactory.createDataSource(), streamUserAgent) }
+        // Ссылка на поток живёт недолго: YouTube отдаёт её с ограничением по
+        // объёму. Раньше обрыв доходил до плеера, и трек начинался заново.
+        // Теперь источник сам берёт новую ссылку и продолжает с той же
+        // позиции, не отдавая ошибку наружу.
+        val rotatingFactory = DataSource.Factory {
+            RotatingStreamDataSource(
+                createFor = { RangeDataSource(httpFactory.createDataSource(), streamUserAgent) },
+                session = streamSession,
+            )
+        }
+        val upstream = DefaultDataSource.Factory(this, rotatingFactory)
         // Кэш потока. Отключался флагом сборки при разборе зависания на минуте;
         // гипотеза не подтвердилась, поэтому кэш остаётся.
         val cache = SimpleCache(
@@ -149,6 +159,20 @@ class PlaybackService : MediaSessionService() {
      * удастся, вейклок сам отпустится, и батарея не сядет молча.
      */
     /** Держим ли мы сервис в foreground своими руками. */
+    /** Кем открывать текущую ссылку: агент клиента, который её выдал. */
+    private val streamUserAgent = StreamUserAgent()
+
+    /**
+     * Текущая ссылка на поток, которой источник данных может пользоваться
+     * для переподключения на ходу.
+     *
+     * Объект общий: источник читает из него отработанный объём, а ViewModel
+     * кладёт свежую ссылку. Пока он null — ведём себя как раньше, без
+     * переподключения внутри источника.
+     */
+    @Volatile
+    internal var streamSession: StreamSession? = null
+
     private var inForeground = false
 
     private var wakeLock: PowerManager.WakeLock? = null
@@ -227,9 +251,14 @@ class PlaybackService : MediaSessionService() {
             if (player != null) {
                 val position = player.currentPosition
                 val playing = player.playWhenReady
-                stuckTicks = StallDetector.nextStreak(playing, position, lastPosition, stuckTicks)
-                // Идёт и позиция растёт — сторож молчит, как и должен.
-                if (playing && stuckTicks >= STALL_TICKS_BEFORE_REPORT) {
+                val state = player.playbackState
+                stuckTicks = StallDetector.nextStreak(
+                    playing, state, position, lastPosition, stuckTicks,
+                )
+                // Зависанием считаем только то, что должно играть и не играет.
+                if (state == StallDetector.STATE_READY &&
+                    playing && stuckTicks >= STALL_TICKS_BEFORE_REPORT
+                ) {
                     stuckTicks = 0
                     com.volna.player.LogBuffer.w(
                         "PlaybackService",
@@ -545,6 +574,16 @@ class PlaybackService : MediaSessionService() {
         fun player(context: Context): ExoPlayer? = instance?.exoPlayer
 
         /**
+         * Заводит сессию ссылки для источника данных.
+         *
+         * [refreshBlocking] вызывается из потока загрузки ExoPlayer, поэтому
+         * обязан быть блокирующим: так он и сделан в ViewModel.
+         */
+        internal fun attachStreamSession(session: StreamSession) {
+            instance?.streamSession = session
+        }
+
+        /**
          * Ждёт создания ExoPlayer: сервис поднимается асинхронно.
          *
          * Именно suspend с [delay], а не цикл с `Thread.sleep`: вызывается с
@@ -572,6 +611,7 @@ class PlaybackService : MediaSessionService() {
             url: String,
             queue: List<Pair<Track, String>>,
             startPositionMs: Long = 0L,
+            userAgent: String? = null,
         ) {
             ensureStarted(context)
             val player = awaitPlayer()
@@ -592,6 +632,9 @@ class PlaybackService : MediaSessionService() {
             // секунду, что и старт, хотя позиция просто ещё не успела
             // сдвинуться. Побочно это лишний перезапуск и ещё один запрос
             // к YouTube — то есть ровно то, чего мы добиваемся.
+            // Агент ставим ДО prepare(): первая же выборка потока идёт
+            // уже с ним, иначе начало читается одним агентом, а добор — другим.
+            instance?.streamUserAgent?.value = userAgent
             instance?.resetStallWatch()
             instance?.promoteToForeground()
             _error.value = null

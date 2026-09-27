@@ -256,4 +256,36 @@ class CatalogMatchTest {
 
         assertEquals("Молчанка", CatalogMatch.pick("Молчанка", "", results)?.title)
     }
+
+    /**
+     * «26.04» — название целиком из коротких чисел. Раньше фильтр слов
+     * короче трёх букв съедал его целиком, сравнивать было не с чем, и трек,
+     * который лежит в каталоге и в выдаче, не находился.
+     */
+    @Test
+    fun `название из коротких чисел находится`() {
+        val found = CatalogMatch.pick(
+            wantedTitle = "26.04",
+            wantedArtist = "Noize MC",
+            candidates = listOf(
+                track("a", "Noize MC — 26.04 на гитаре кавер и разбор", artist = "канал"),
+                track("b", "26.04"),
+            ),
+        )
+        assertEquals("b", found?.id)
+    }
+
+    /** Тот же случай, но с настоящей подписью «Композиция • Noize MC». */
+    @Test
+    fun `композиция с числовым названием находится`() {
+        val found = CatalogMatch.pick(
+            wantedTitle = "26.04",
+            wantedArtist = "Noize MC",
+            candidates = listOf(
+                track("acid", "26.04", artist = "Acid Westerns"),
+                track("topic", "26.04", artist = "Noize MC"),
+            ),
+        )
+        assertEquals("исполнитель должен решить, кому принадлежит трек", "topic", found?.id)
+    }
 }

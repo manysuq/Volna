@@ -10,6 +10,8 @@ internal object StreamHeaders {
 
     const val RANGE = "Range"
 
+    const val USER_AGENT = "User-Agent"
+
     /**
      * Диапазон для первого запроса.
      *

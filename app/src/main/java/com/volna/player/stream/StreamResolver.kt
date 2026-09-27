@@ -23,27 +23,36 @@ class StreamResolver {
      * Возвращает рабочую ссылку на аудиопоток [track] или null.
      * Проверенная ссылка гарантированно отдаёт данные с текущего IP.
      */
-    suspend fun resolve(track: Track): String? = withContext(Dispatchers.IO) {
+    /**
+     * Готовая ссылка на поток.
+     *
+     * [userAgent] — обязательная часть, а не украшение: подпись ссылки привязана
+     * к InnerTube-клиенту, который её выдал, и открытие чужим User-Agent'ом
+     * даёт 403. Раньше ссылка возвращалась одна, а User-Agent был зашит в
+     * [USER_AGENT] и не мог за ней поспевать.
+     */
+    data class Resolved(val url: String, val userAgent: String)
+
+    suspend fun resolve(track: Track): Resolved? = withContext(Dispatchers.IO) {
         try {
             val request = DownloadRequest(track.videoUrl)
                 .format("bestaudio")
                 .userAgent(USER_AGENT)
             // Библиотека сама перезапрашивает ссылку, пока та не начнёт работать
-            ytdlp.getVerifiedStreamUrl(request).also { url ->
+            ytdlp.getVerifiedStreamUrl(request).let { resolved ->
+                val url = resolved.url
                 val itag = Regex("[?&]itag=(\\d+)").find(url)?.groupValues?.get(1) ?: "?"
-                // c= — это InnerTube-клиент, подпись ссылки привязана именно к
-                // нему. Плеер при этом шлёт User-Agent клиента ANDROID, потому
-                // что он зашит в USER_AGENT. Если ссылку выдал ANDROID_VR или
-                // IOS, подпись и User-Agent не совпадают, и googlevideo
-                // отвечает 403. Поэтому клиента пишем в лог: по нему видно
-                // расхождение сразу, а не после пяти минут 403.
+                // c= — InnerTube-клиент, подпись ссылки привязана к нему.
+                // Теперь User-Agent берётся у того же клиента, так что
+                // расхождения быть не может, но в лог клиента пишем: по нему
+                // видно, кто на самом деле отдал ссылку, если 403 всё же есть.
                 val client = Regex("[?&]c=([^&]+)").find(url)?.groupValues?.get(1) ?: "?"
                 Log.i(TAG, "Рабочая ссылка для ${track.id}: itag=$itag client=$client")
                 com.volna.player.LogBuffer.d(
                     TAG,
-                    "ссылка получена, itag=$itag клиент=$client " +
-                        "UA=${if (client == "ANDROID") "совпадает" else "НЕ СОВПАДАЕТ"}",
+                    "ссылка получена, itag=$itag клиент=$client",
                 )
+                Resolved(url, resolved.userAgent)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Не удалось получить ссылку: ${e.message}", e)

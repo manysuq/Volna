@@ -2,6 +2,8 @@ package com.volna.player
 
 import com.volna.player.player.StreamHeaders
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import com.volna.player.player.StreamUserAgent
 import org.junit.Test
 
 /**
@@ -51,5 +53,27 @@ class StreamHeadersTest {
     @Test
     fun `пустые заголовки тоже получают Range`() {
         assertEquals("bytes=0-", StreamHeaders.withRange(emptyMap())["Range"])
+    }
+}
+/**
+ * User-Agent идёт вместе со ссылкой.
+ *
+ * Подпись ссылки привязана к InnerTube-клиенту, который её выдал, поэтому
+ * агент должен доезжать до каждого запроса, а не жить один на всё приложение.
+ */
+class StreamUserAgentTest {
+
+    @Test
+    fun `агент по умолчанию не задан`() {
+        assertNull(StreamUserAgent().value)
+    }
+
+    @Test
+    fun `агент меняется на каждом треке`() {
+        val ua = StreamUserAgent()
+        ua.value = "Mozilla/5.0 (веб-клиент)"
+        assertEquals("Mozilla/5.0 (веб-клиент)", ua.value)
+        ua.value = "com.google.android.youtube/20.10.38"
+        assertEquals("com.google.android.youtube/20.10.38", ua.value)
     }
 }

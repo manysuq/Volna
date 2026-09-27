@@ -70,7 +70,24 @@ public final class YtDlp {
      */
     private static final long PROBE_OFFSET_BYTES = 256L * 1024L;
 
-    public String getVerifiedStreamUrl(DownloadRequest request) throws IOException {
+    /**
+     * Ссылка на поток вместе с User-Agent, которым её надо открывать.
+     *
+     * Пара неразделима: подпись ссылки привязана к InnerTube-клиенту, который
+     * её выдал, и открытие чужим User-Agent'ом даёт 403. Возвращать только
+     * ссылку значит отдать вызывающему зашитый где-то UA и гадать, совпал ли.
+     */
+    public static final class ResolvedStream {
+        public final String url;
+        public final String userAgent;
+
+        public ResolvedStream(String url, String userAgent) {
+            this.url = url;
+            this.userAgent = userAgent;
+        }
+    }
+
+    public ResolvedStream getVerifiedStreamUrl(DownloadRequest request) throws IOException {
         IOException lastError = null;
         for (int attempt = 1; attempt <= MAX_URL_ATTEMPTS; attempt++) {
             List<String> urls = getStreamUrls(request);
@@ -78,7 +95,7 @@ public final class YtDlp {
                 throw new YtDlpException("Аудиопоток не найден");
             }
             String url = urls.get(0);
-            String ua = userAgentOf(request);
+            String ua = streamUserAgent(client, request);
             int status = Http.probeRange(url, ua);
             if (status != 200 && status != 206) {
                 lastError = new IOException("Ссылка не работает с нуля, HTTP " + status);
@@ -94,11 +111,26 @@ public final class YtDlp {
                                 + " байт, HTTP " + far);
                 continue;
             }
-            return url;
+            return new ResolvedStream(url, ua);
         }
         throw new YtDlpException(
                 "Не удалось получить рабочую ссылку на поток за " + MAX_URL_ATTEMPTS + " попыток",
                 lastError);
+    }
+
+    /**
+     * User-Agent клиента, выдавшего ссылку.
+     *
+     * Раньше проверка шла зашитым UA из запроса, и если ссылку отдал не тот
+     * клиент, проверка сама ломалась: правильным UA она проходила, а
+     * воспроизведение с неправильным — нет.
+     */
+    private String streamUserAgent(InnerTubeClient client, DownloadRequest request) {
+        InnerTubeClient.ClientProfile profile = client.lastProfile();
+        if (profile != null && profile.userAgent != null) {
+            return profile.userAgent;
+        }
+        return userAgentOf(request);
     }
 
     private String userAgentOf(DownloadRequest request) {
