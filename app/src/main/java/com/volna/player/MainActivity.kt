@@ -186,6 +186,12 @@ fun PlayerContent(
     val catalogLoading by viewModel.catalogLoading.collectAsStateWithLifecycle()
     val savedTracks by viewModel.savedTracks.collectAsStateWithLifecycle()
     val favorites by viewModel.favorites.collectAsStateWithLifecycle()
+    // Набор id «нравится» считаем здесь и передаём вниз данными, а не
+    // геттером. Связанная ссылка viewModel::isFavorite кешируется Kotlin-ом и
+    // остаётся тем же объектом, поэтому Compose считал параметр неизменившимся
+    // и пропускал перерисовку — сердечко в поиске не заливалось, пока не
+    // заходили в медиатеку и обратно.
+    val favoriteIds = remember(favorites) { favorites.mapTo(mutableSetOf()) { it.id } }
     val playlists by viewModel.playlists.collectAsStateWithLifecycle()
     val openPlaylist by viewModel.openPlaylist.collectAsStateWithLifecycle()
     val playlistTracks by viewModel.playlistTracks.collectAsStateWithLifecycle()
@@ -299,7 +305,7 @@ fun PlayerContent(
                             onDownload = viewModel::download,
                             onCancelDownload = viewModel::cancelDownload,
                             onPlay = { track, all -> viewModel.playStream(track, all) },
-                            isFavorite = viewModel::isFavorite,
+                            favoriteIds = favoriteIds,
                             onToggleFavorite = viewModel::toggleFavorite,
                         )
 
@@ -311,7 +317,7 @@ fun PlayerContent(
                             onPlay = { track, all -> viewModel.playStream(track, all) },
                             onDownload = viewModel::download,
                             onCancelDownload = viewModel::cancelDownload,
-                            isFavorite = viewModel::isFavorite,
+                            favoriteIds = favoriteIds,
                             onToggleFavorite = viewModel::toggleFavorite,
                         )
 
@@ -418,7 +424,7 @@ fun PlayerContent(
                 onCancelDownload = { viewModel.cancelDownload(current.id) },
                 onShare = { shareTrack(context, current) },
                 onRetry = viewModel::retryStream,
-                isFavorite = nowPlaying?.let { viewModel.isFavorite(it.id) } == true,
+                isFavorite = nowPlaying?.id in favoriteIds,
                 onToggleFavorite = { nowPlaying?.let(viewModel::toggleFavorite) },
                 onCollapse = { fullPlayer = false },
             )

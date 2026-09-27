@@ -60,7 +60,7 @@ fun SearchScreen(
     onCancelDownload: (String) -> Unit,
     onPlay: (Track, List<Track>) -> Unit,
     modifier: Modifier = Modifier,
-    isFavorite: (String) -> Boolean = { false },
+    favoriteIds: Set<String> = emptySet(),
     onToggleFavorite: (Track) -> Unit = { },
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
@@ -89,7 +89,7 @@ fun SearchScreen(
                 onDownload = onDownload,
                 onCancelDownload = onCancelDownload,
                 onPlay = onPlay,
-                isFavorite = isFavorite,
+                favoriteIds = favoriteIds,
                 onToggleFavorite = onToggleFavorite,
             )
         }
@@ -250,7 +250,7 @@ private fun TrackList(
     onDownload: (Track) -> Unit,
     onCancelDownload: (String) -> Unit,
     onPlay: (Track, List<Track>) -> Unit,
-    isFavorite: (String) -> Boolean = { false },
+    favoriteIds: Set<String> = emptySet(),
     onToggleFavorite: (Track) -> Unit = { },
 ) {
     LazyColumn(
@@ -266,7 +266,7 @@ private fun TrackList(
                 onCancel = { onCancelDownload(track.id) },
                 // тап по строке или кнопка — слушаем сразу
                 onPlay = { onPlay(track, tracks) },
-                isFavorite = isFavorite(track.id),
+                isFavorite = track.id in favoriteIds,
                 onToggleFavorite = { onToggleFavorite(track) },
             )
         }
