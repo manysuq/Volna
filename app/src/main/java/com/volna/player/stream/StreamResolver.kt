@@ -30,10 +30,20 @@ class StreamResolver {
                 .userAgent(USER_AGENT)
             // Библиотека сама перезапрашивает ссылку, пока та не начнёт работать
             ytdlp.getVerifiedStreamUrl(request).also { url ->
-                // В URL есть itag: по нему видно, что взят именно audio-only поток
                 val itag = Regex("[?&]itag=(\\d+)").find(url)?.groupValues?.get(1) ?: "?"
-                Log.i(TAG, "Рабочая ссылка для ${track.id}: itag=$itag audio-only")
-                com.volna.player.LogBuffer.d(TAG, "ссылка получена, itag=$itag")
+                // c= — это InnerTube-клиент, подпись ссылки привязана именно к
+                // нему. Плеер при этом шлёт User-Agent клиента ANDROID, потому
+                // что он зашит в USER_AGENT. Если ссылку выдал ANDROID_VR или
+                // IOS, подпись и User-Agent не совпадают, и googlevideo
+                // отвечает 403. Поэтому клиента пишем в лог: по нему видно
+                // расхождение сразу, а не после пяти минут 403.
+                val client = Regex("[?&]c=([^&]+)").find(url)?.groupValues?.get(1) ?: "?"
+                Log.i(TAG, "Рабочая ссылка для ${track.id}: itag=$itag client=$client")
+                com.volna.player.LogBuffer.d(
+                    TAG,
+                    "ссылка получена, itag=$itag клиент=$client " +
+                        "UA=${if (client == "ANDROID") "совпадает" else "НЕ СОВПАДАЕТ"}",
+                )
             }
         } catch (e: Exception) {
             Log.e(TAG, "Не удалось получить ссылку: ${e.message}", e)

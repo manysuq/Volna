@@ -201,6 +201,12 @@ class PlaybackService : MediaSessionService() {
      * заменяет наше. А вот stopForeground(REMOVE) стирал бы чужое уведомление —
      * поэтому его здесь нет, и добавлять нельзя.
      */
+    /** Сбрасывает накопленную полосу застоя при старте нового потока. */
+    fun resetStallWatch() {
+        stuckTicks = 0
+        lastPosition = -1L
+    }
+
     private fun promoteToForeground() {
         if (inForeground) return
         val notification = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
@@ -579,6 +585,14 @@ class PlaybackService : MediaSessionService() {
             // есть 5 секунд, а awaitPlayer() сам по себе ждёт до двух. Откладывать
             // до конца подготовки нельзя — иначе окно закроется на ровной минуте,
             // как и было.
+            // Сторож зависания приводим в исходное состояние.
+            //
+            // Он жил между треками: накопленная полоса застоя от прошлого
+            // потока переезжала на новый, и тот объявлялся зависшим в ту же
+            // секунду, что и старт, хотя позиция просто ещё не успела
+            // сдвинуться. Побочно это лишний перезапуск и ещё один запрос
+            // к YouTube — то есть ровно то, чего мы добиваемся.
+            instance?.resetStallWatch()
             instance?.promoteToForeground()
             _error.value = null
             _currentMediaId.value = track.id

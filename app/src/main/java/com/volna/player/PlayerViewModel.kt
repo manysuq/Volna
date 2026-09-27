@@ -11,6 +11,7 @@ import com.volna.player.download.SavedTrack
 import com.volna.player.library.LibraryStore
 import com.volna.player.library.Playlist
 import com.volna.player.download.DownloadProgress
+import com.volna.player.player.ArtistQueue
 import com.volna.player.player.PlaybackService
 import com.volna.player.player.ReconnectPolicy
 import com.volna.player.search.Track
@@ -618,14 +619,21 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
      * Перемешивание само по себе ничего не меняет, пока не выбран трек —
      * поэтому сразу прыгаем, иначе нажатие выглядит как «ничего не сделал».
      */
+    /**
+     * Кнопка перемешивания.
+     *
+     * Раньше включение перемешивания сразу прыгало на случайный трек, и
+     * слушатель терял полминуты песни. В нормальных сервисах так не работает:
+     * флаг только запоминается, а текущий трек доигрывается как обычно, и
+     * перемешивание вступает в силу со следующего перехода.
+     *
+     * Поэтому здесь намеренно нет вызова playAlbumTrack: переход вперёд
+     * (AlbumOrder.target со shuffled = true) сам возьмёт случайный трек, когда
+     * текущий доиграет.
+     */
     fun toggleShuffle() {
         if (albumContext == null) return          // мешать нечего
         _shuffle.value = !_shuffle.value
-        if (!_shuffle.value) return               // выключили: остаёмся на текущем
-        val album = albumContext ?: return
-        if (album.tracks.size < 2) return
-        val next = AlbumOrder.randomOtherIndex(album.tracks.size, album.index) { Random.nextInt(it) }
-        playAlbumTrack(next)
     }
 
     /** Режим повтора: OFF → ALL → ONE → OFF. */
@@ -737,8 +745,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         _catalogLoading.value = true
         viewModelScope.launch {
             val albums = _albums.value.ifEmpty { MusicCatalog.albumsOf(artist) }
-            val all = albums.flatMap { MusicCatalog.tracksOf(it) }
-                .distinctBy { it.title.trim().lowercase() }
+            val all = ArtistQueue.build(albums.map { MusicCatalog.tracksOf(it) })
             if (all.isEmpty()) {
                 _catalogLoading.value = false
                 _streamState.value = StreamState.Error(
@@ -748,9 +755,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             }
             _albumTracks.value = all
             _catalogLoading.value = false
-            // Стартуем со случайного трека: порядок альбомов в iTunes не
-            // имеет отношения к порядку прослушивания.
-            playCatalogTrack(all.random())
+            // Список уже перемешан целиком, поэтому стартуем с первого: так
+            // «слушать всё» звучит как случайные треки из всех альбомов, а не
+            // как альбомы по очереди.
+            playCatalogTrack(all.first())
         }
     }
 

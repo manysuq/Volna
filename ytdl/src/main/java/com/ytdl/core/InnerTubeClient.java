@@ -25,12 +25,23 @@ public final class InnerTubeClient {
     /** Описание одного InnerTube-клиента. */
     public static final class ClientProfile {
         public final String name;
+        /**
+         * Числовой идентификатор клиента во InnerTube API.
+         *
+         * Именно число, а не имя: в X-Youtube-Client-Name и в clientName тела
+         * запроса YouTube ждёт именно его. Строка вместо числа означает, что мы
+         * называемся клиентом не так, как нас знает InnerTube, и в ответ
+         * приходят форматы, которые сам же YouTube затем не признаёт на CDN —
+         * ссылка проходит нашу проверку и умирает на стриме с 403.
+         */
+        public final int id;
         public final String version;
         public final String userAgent;
         public final Map<String, Object> extra;
 
-        public ClientProfile(String name, String version, String userAgent,
+        public ClientProfile(int id, String name, String version, String userAgent,
                              Map<String, Object> extra) {
+            this.id = id;
             this.name = name;
             this.version = version;
             this.userAgent = userAgent;
@@ -43,12 +54,12 @@ public final class InnerTubeClient {
 
         Map<String, Object> androidExtra = new LinkedHashMap<String, Object>();
         androidExtra.put("androidSdkVersion", Integer.valueOf(34));
-        list.add(new ClientProfile("ANDROID", "20.10.38",
+        list.add(new ClientProfile(3, "ANDROID", "20.10.38",
                 "com.google.android.youtube/20.10.38 (Linux; U; Android 14) gzip", androidExtra));
 
         Map<String, Object> vrExtra = new LinkedHashMap<String, Object>();
         vrExtra.put("androidSdkVersion", Integer.valueOf(32));
-        list.add(new ClientProfile("ANDROID_VR", "1.60.19",
+        list.add(new ClientProfile(28, "ANDROID_VR", "1.60.19",
                 "com.google.android.apps.youtube.vr.oculus/1.60.19 (Linux; U; Android 12) gzip",
                 vrExtra));
 
@@ -57,7 +68,7 @@ public final class InnerTubeClient {
         iosExtra.put("deviceModel", "iPhone16,2");
         iosExtra.put("osName", "iPhone");
         iosExtra.put("osVersion", "18.3.1.22D72");
-        list.add(new ClientProfile("IOS", "20.10.4",
+        list.add(new ClientProfile(5, "IOS", "20.10.4",
                 "com.google.ios.youtube/20.10.4 (iPhone16,2; U; CPU iOS 18_3_1 like Mac OS X)",
                 iosExtra));
 
@@ -99,7 +110,7 @@ public final class InnerTubeClient {
 
     private Map<String, Object> fetch(String videoId, ClientProfile profile) throws IOException {
         Map<String, Object> client = new LinkedHashMap<String, Object>();
-        client.put("clientName", profile.name);
+        client.put("clientName", Integer.valueOf(profile.id));
         client.put("clientVersion", profile.version);
         client.put("hl", "en");
         client.put("gl", "US");
@@ -120,7 +131,7 @@ public final class InnerTubeClient {
         headers.put("Accept", "*/*");
         headers.put("Accept-Language", "en-US,en;q=0.9");
         headers.put("Origin", "https://www.youtube.com");
-        headers.put("X-Youtube-Client-Name", profile.name);
+        headers.put("X-Youtube-Client-Name", String.valueOf(profile.id));
         headers.put("X-Youtube-Client-Version", profile.version);
 
         String text = Http.post(ENDPOINT, JsonWriter.write(body), headers);

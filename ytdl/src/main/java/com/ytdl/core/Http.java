@@ -110,10 +110,24 @@ public final class Http {
      * @return код ответа (200 или 206 — ссылка живая), -1 при ошибке сети
      */
     public static int probeRange(String url, String userAgent) {
+        return probeRange(url, userAgent, 0L);
+    }
+
+    /**
+     * Проверяет, отдаёт ли URL данные начиная с [offset].
+     *
+     * Смещение нужно, потому что ссылка, годная с нуля, может быть негодной
+     * дальше: подпись googlevideo привязана к диапазону и клиенту. Плеер
+     * первым делом тянет начало трека — и это проходит, — а через несколько
+     * секунд доливает следующий кусок уже со смещения и получает 403. Старая
+     * проверка читала ровно 1 КБ с нуля, поэтому такую ссылку пропускала:
+     * годная на килобайт, но негодная на трек целиком.
+     */
+    public static int probeRange(String url, String userAgent, long offset) {
         Map<String, String> headers = new LinkedHashMap<String, String>();
         headers.put("User-Agent", userAgent);
         headers.put("Accept", "*/*");
-        headers.put("Range", "bytes=0-1023");
+        headers.put("Range", "bytes=" + offset + "-" + (offset + 1023L));
         Connection conn = null;
         try {
             conn = open(url, "GET", headers);

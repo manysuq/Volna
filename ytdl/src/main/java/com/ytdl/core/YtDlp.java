@@ -61,6 +61,15 @@ public final class YtDlp {
      *
      * @return рабочая ссылка или null
      */
+    /**
+     * С какого смещения проверять, что ссылка держит поток целиком.
+     *
+     * 256 КБ — это несколько секунд звука. Именно столько успевает проиграть
+     * плеер, прежде чем у него кончится первый кусок и он пойдёт за следующим:
+     * столько и держала ссылка до появления 403.
+     */
+    private static final long PROBE_OFFSET_BYTES = 256L * 1024L;
+
     public String getVerifiedStreamUrl(DownloadRequest request) throws IOException {
         IOException lastError = null;
         for (int attempt = 1; attempt <= MAX_URL_ATTEMPTS; attempt++) {
@@ -69,11 +78,23 @@ public final class YtDlp {
                 throw new YtDlpException("Аудиопоток не найден");
             }
             String url = urls.get(0);
-            int status = Http.probeRange(url, userAgentOf(request));
-            if (status == 200 || status == 206) {
-                return url;
+            String ua = userAgentOf(request);
+            int status = Http.probeRange(url, ua);
+            if (status != 200 && status != 206) {
+                lastError = new IOException("Ссылка не работает с нуля, HTTP " + status);
+                continue;
             }
-            lastError = new IOException("Ссылка не работает, HTTP " + status);
+            // Годная с нуля ещё не значит годная целиком: плеер через пару
+            // секунд пойдёт за следующим куском уже со смещения. Проверяем и
+            // его, иначе такая ссылка доходит до пользователя и обрывается.
+            int far = Http.probeRange(url, ua, PROBE_OFFSET_BYTES);
+            if (far != 200 && far != 206) {
+                lastError = new IOException(
+                        "Ссылка обрывается со смещения " + PROBE_OFFSET_BYTES
+                                + " байт, HTTP " + far);
+                continue;
+            }
+            return url;
         }
         throw new YtDlpException(
                 "Не удалось получить рабочую ссылку на поток за " + MAX_URL_ATTEMPTS + " попыток",
