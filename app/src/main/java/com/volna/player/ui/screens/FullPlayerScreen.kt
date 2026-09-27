@@ -573,8 +573,15 @@ private fun SecondaryActions(
     ) {
         val isDownloading = downloadState == DownloadState.DOWNLOADING ||
             downloadState == DownloadState.QUEUED
+        val isDone = downloadState == DownloadState.DONE
         IconButton(
-            onClick = if (isDownloading) onCancelDownload else onDownload,
+            // Уже скачанный трек повторно не качаем: раньше нажатие на
+            // «скачано» запускало загрузку заново, потому что условие
+            // срабатывало только на активной загрузке. Слушать его можно
+            // во вкладке «Треки».
+            onClick = {
+                if (isDownloading) onCancelDownload() else if (!isDone) onDownload()
+            },
             modifier = Modifier.size(48.dp),
         ) {
             when (downloadState) {

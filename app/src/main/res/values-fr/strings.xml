@@ -85,4 +85,11 @@
     <string name="notification_connecting">Connexion…</string>
     <string name="player_shuffle">Mélanger</string>
     <string name="notice_not_in_music">Pas dans YouTube Music — recherche dans les vidéos pour « %1$s »</string>
+    <string name="tab_downloads">Téléchargements</string>
+    <string name="downloads_empty_title">Aucun titre téléchargé</string>
+    <string name="downloads_empty_subtitle">Touchez l’icône de téléchargement pour enregistrer dans Musique/Volna</string>
+    <string name="downloads_delete">Supprimer</string>
+    <string name="downloads_play">Écouter</string>
+    <string name="download_publish_failed">Impossible d’enregistrer le fichier</string>
+    <string name="downloads_count">%1$d titres, %2$s</string>
 </resources>

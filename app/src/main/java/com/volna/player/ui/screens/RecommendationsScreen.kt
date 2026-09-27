@@ -36,6 +36,8 @@ fun RecommendationsScreen(
     isLoading: Boolean,
     currentTrackId: String?,
     onPlay: (Track, List<Track>) -> Unit,
+    onDownload: (Track) -> Unit,
+    onCancelDownload: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when {
@@ -71,8 +73,8 @@ fun RecommendationsScreen(
                     download = null,
                     isCurrent = track.id == currentTrackId,
                     onPlay = { onPlay(track, recommendations) },
-                    onDownload = { },
-                    onCancel = { },
+                    onDownload = { onDownload(track) },
+                    onCancel = { onCancelDownload(track.id) },
                 )
             }
         }
@@ -80,7 +82,7 @@ fun RecommendationsScreen(
 }
 
 @Composable
-private fun Hint(
+fun Hint(
     title: String,
     subtitle: String,
     icon: @Composable () -> Unit,

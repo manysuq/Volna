@@ -4,6 +4,7 @@ import android.content.Context
 import com.ytdl.core.DownloadRequest
 import com.ytdl.core.ProgressListener
 import com.ytdl.core.YtDlp
+import com.volna.player.R
 import com.volna.player.search.Track
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +28,9 @@ class DownloadManager(private val context: Context) {
     private val ytdlp = YtDlp()
     private val scope = CoroutineScope(Dispatchers.IO)
 
+    /** Публичное хранилище: общая папка Music/Volna + реестр скачанного. */
+    val store = DownloadStore(context)
+
     private val _progress = MutableStateFlow<Map<String, DownloadProgress>>(emptyMap())
     val progress: StateFlow<Map<String, DownloadProgress>> = _progress.asStateFlow()
 
@@ -37,10 +41,13 @@ class DownloadManager(private val context: Context) {
         if (jobs.containsKey(track.id)) return
 
         val job = scope.launch {
-            val target = File(musicDir(), fileName(track))
+            // Сначала во временный файл: MediaStore требует готовый поток,
+            // а писать напрямую в него нельзя. Временный каталог чистится
+            // системой, поэтому недоудалённый файл не копится.
+            val target = File(tempDir(), fileName(track))
             try {
                 val request = DownloadRequest(track.videoUrl)
-                    .outputDir(musicDir())
+                    .outputDir(tempDir())
                     .format(if (audioOnly) "bestaudio" else "bestvideo+bestaudio")
                     .outputTemplate("%(title)s.%(ext)s")
                     .overwrite(true)
@@ -69,10 +76,26 @@ class DownloadManager(private val context: Context) {
                         }
                     })
                 }
-                update(track.id) { it.copy(state = DownloadState.DONE, path = file.absolutePath) }
-                onDone(Result.success(file))
+                // Публикуем в общую папку: во внутреннем хранилище файл
+                // не найти ни файловым менеджером, ни музыкальной библиотекой,
+                // и он исчезает при удалении приложения.
+                val uri = store.publish(file, track)
+                if (uri == null) {
+                    file.delete()
+                    update(track.id) {
+                        it.copy(
+                            state = DownloadState.FAILED,
+                            error = context.getString(R.string.download_publish_failed),
+                        )
+                    }
+                    onDone(Result.failure(IllegalStateException("publish failed")))
+                    return@launch
+                }
+                store.remember(track, uri, file.length())
+                file.delete()
+                update(track.id) { it.copy(state = DownloadState.DONE, path = uri, saved = true) }
             } catch (e: Exception) {
-                val message = e.message ?: "Неизвестная ошибка"
+                val message = e.message ?: e.javaClass.simpleName
                 update(track.id) { it.copy(state = DownloadState.FAILED, error = message) }
                 onDone(Result.failure(e))
             } finally {
@@ -100,7 +123,7 @@ class DownloadManager(private val context: Context) {
         }
     }
 
-    private fun musicDir(): File = File(context.filesDir, "music").apply { mkdirs() }
+    private fun tempDir(): File = File(context.cacheDir, "music-dl").apply { mkdirs() }
 
     private fun fileName(track: Track): String =
         com.ytdl.core.FileUtils.sanitizeName(track.title) + ".m4a"

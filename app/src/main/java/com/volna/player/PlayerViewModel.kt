@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.Player
 import com.volna.player.catalog.MusicCatalog
 import com.volna.player.download.DownloadManager
+import com.volna.player.download.SavedTrack
 import com.volna.player.download.DownloadProgress
 import com.volna.player.player.PlaybackService
 import com.volna.player.search.Track
@@ -33,6 +34,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private val resolver = StreamResolver()
 
     val downloads = DownloadManager(app)
+
+    /** Скачанные треки: читается из реестра, переживает перезапуск. */
+    private val _savedTracks = MutableStateFlow<List<SavedTrack>>(emptyList())
+    val savedTracks: StateFlow<List<SavedTrack>> = _savedTracks.asStateFlow()
     val searchState = repository.state
 
     private val _query = MutableStateFlow("")
@@ -270,14 +275,56 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
      */
     private var albumContext: AlbumContext? = null
 
-    /** Скачать трек на устройство (оставить как запасной вариант). */
+    /** Скачать трек в общую папку Music/Volna. */
     fun download(track: Track) {
         downloads.download(track) { result ->
-            result.onSuccess { file -> android.util.Log.i("PlayerViewModel", "Скачано: ${file.name}") }
+            // Успешный файл уходит в реестр внутри DownloadManager, а наружу
+            // отдаётся только ошибка: временный файл к этому моменту удалён.
+            result.onFailure { refreshSaved() }
+            refreshSaved()
         }
     }
 
     fun cancelDownload(trackId: String) = downloads.cancel(trackId)
+
+    /** Перечитывает реестр: он меняется и при загрузке, и при удалении. */
+    fun refreshSaved() {
+        _savedTracks.value = downloads.store.list()
+    }
+
+    /**
+     * Играет сохранённый трек с диска, без обращения к сети.
+     *
+     * Отдельный путь, а не playStream: тот идёт в YouTube за ссылкой, а здесь
+     * уже есть готовый локальный uri. Плейлист при этом сбрасывается — соседних
+     * локальных треков в очереди не строим, «вперёд» уйдёт в радио.
+     */
+    fun playSaved(item: SavedTrack) {
+        val track = Track(
+            id = item.id,
+            title = item.title,
+            channel = item.artist,
+            durationSeconds = item.durationSeconds,
+            thumbnailUrl = item.thumbnailUrl,
+            videoUrl = item.uri,
+            isOfficialMusic = true,
+            musicArtist = item.artist,
+            album = item.album,
+        )
+        albumContext = null
+        playGeneration++
+        retryAttempts = 0
+        _nowPlaying.value = track
+        _streamState.value = StreamState.Ready
+        _playbackError.value = null
+        viewModelScope.launch { startPlayback(track, item.uri) }
+    }
+
+    /** Удаляет файл с диска и запись из реестра. */
+    fun deleteSaved(trackId: String) {
+        downloads.store.remove(trackId)
+        refreshSaved()
+    }
 
     fun togglePlayPause() {
         val player = PlaybackService.player(getApplication()) ?: run {

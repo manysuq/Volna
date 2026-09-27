@@ -45,6 +45,7 @@ import com.volna.player.ui.screens.AlbumScreen
 import com.volna.player.ui.screens.AlbumsScreen
 import com.volna.player.ui.screens.AppTab
 import com.volna.player.ui.screens.ArtistScreen
+import com.volna.player.ui.screens.DownloadsScreen
 import com.volna.player.ui.screens.FullPlayerScreen
 import com.volna.player.ui.screens.MiniPlayer
 import com.volna.player.ui.screens.RecommendationsScreen
@@ -175,6 +176,11 @@ fun PlayerContent(
     val albums by viewModel.albums.collectAsStateWithLifecycle()
     val albumTracks by viewModel.albumTracks.collectAsStateWithLifecycle()
     val catalogLoading by viewModel.catalogLoading.collectAsStateWithLifecycle()
+    val savedTracks by viewModel.savedTracks.collectAsStateWithLifecycle()
+
+    // Реестр читается при показе вкладки: иначе он оставался бы пустым после
+    // скачивания до перезапуска.
+    LaunchedEffect(tab) { if (tab == AppTab.Downloads) viewModel.refreshSaved() }
 
     // Системный «назад» должен закрывать верхний слой, а не выбрасывать из
     // приложения. Порядок в списке — это приоритет: верхний слой первый,
@@ -259,6 +265,15 @@ fun PlayerContent(
                             isLoading = recLoading,
                             currentTrackId = nowPlaying?.id,
                             onPlay = { track, all -> viewModel.playStream(track, all) },
+                            onDownload = viewModel::download,
+                            onCancelDownload = viewModel::cancelDownload,
+                        )
+
+                        AppTab.Downloads -> DownloadsScreen(
+                            saved = savedTracks,
+                            currentTrackId = nowPlaying?.id,
+                            onPlay = viewModel::playSaved,
+                            onDelete = { viewModel.deleteSaved(it.id) },
                         )
 
                         AppTab.Albums -> when (val route = catalogRoute) {

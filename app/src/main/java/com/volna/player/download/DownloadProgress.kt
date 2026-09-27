@@ -13,6 +13,8 @@ data class DownloadProgress(
     val speed: Double = 0.0,
     val path: String? = null,
     val error: String? = null,
+    /** Файл уже опубликован в общую папку и записан в реестр. */
+    val saved: Boolean = false,
 ) {
     val percent: Int
         get() = if (total > 0) ((downloaded * 100) / total).toInt().coerceIn(0, 100) else 0

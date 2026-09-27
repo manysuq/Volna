@@ -108,6 +108,9 @@ class PlaybackService : MediaSessionService() {
         mediaSession = MediaSession.Builder(this, exoPlayer!!).build()
     }
 
+    /** Пока ли ours заглушка, а не уведомление Media3. */
+    private var placeholderShown = false
+
     private val playerListener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             _buffering.value = playbackState == Player.STATE_BUFFERING
@@ -117,6 +120,11 @@ class PlaybackService : MediaSessionService() {
             // оно уводило бы воспроизведение не туда.
             if (playbackState == Player.STATE_ENDED) {
                 _trackFinished.tryEmit(exoPlayer?.currentMediaItem?.mediaId)
+            }
+            // Реальное состояние дошло до Media3: он теперь отвечает за
+            // уведомление, и наша надпись «Подключение…» должна уйти.
+            if (playbackState == Player.STATE_READY) {
+                placeholderShown = false
             }
         }
 
@@ -142,6 +150,7 @@ class PlaybackService : MediaSessionService() {
             _buffering.value = false
             _isPlayingState.value = false
             _error.value = reason
+            clearPlaceholder()
             // 403 отправляем на переподключение: ссылка зашита IP клиента и
             // стареет, поэтому новая ссылка от 403 спасает. Раньше я здесь 403
             // отсекал, посчитав его «сервер не даст данных» — и автопереподключение
@@ -163,11 +172,36 @@ class PlaybackService : MediaSessionService() {
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val result = super.onStartCommand(intent, flags, startId)
-        val hasQueue = (exoPlayer?.mediaItemCount ?: 0) > 0
-        if (hasQueue && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NOTIFICATION_ID, buildPlaceholderNotification())
+        // Заглушку ставим только если плеер действительно что-то запускает.
+        // Раньше условием была непустая очередь, но очередь переживает паузу
+        // и прошлую сессию, поэтому при каждом запуске приложения в шторке
+        // появлялось «Подключение…» навсегда — играть было никому.
+        val player = exoPlayer
+        if (player != null && player.playbackState != Player.STATE_IDLE) {
+            showPlaceholder()
         }
         return result
+    }
+
+    /** Показывает «Подключение…» поверх пустого уведомления Media3. */
+    private fun showPlaceholder() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
+        placeholderShown = true
+        startForeground(NOTIFICATION_ID, buildPlaceholderNotification())
+    }
+
+    /**
+     * Убирает заглушку, если Media3 ещё не перехватил уведомление.
+     *
+     * Иначе при обрыве до начала воспроизведения надпись «Подключение…»
+     * остаётся висеть в шторке, хотя ничего не подключается.
+     */
+    private fun clearPlaceholder() {
+        if (!placeholderShown) return
+        placeholderShown = false
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        }
     }
 
     private fun buildPlaceholderNotification(): android.app.Notification {
@@ -348,20 +382,17 @@ class PlaybackService : MediaSessionService() {
                 "PlaybackService",
                 "старт: «${track.title}» (${track.musicArtist}), в очереди ${queue.size}",
             )
+            // Заглушка обязана встать ДО prepare(). Media3 публикует своё
+            // уведомление по смене состояния плеера, а мы ставили заглушку
+            // после prepare() — то есть перекрывали уже готовое уведомление
+            // плеера надписью «Подключение…», и Media3 больше не обновлял его,
+            // потому что состояние не менялось.
+            instance?.showPlaceholder()
             val items = queue.map { (item, itemUrl) -> buildItem(item, itemUrl) }
             val index = queue.indexOfFirst { (item, _) -> item.id == track.id }.coerceAtLeast(0)
             player.setMediaItems(items, index, 0L)
             player.prepare()
             player.playWhenReady = true
-            // Заглушку ставим здесь, а не в onStartCommand: к этому моменту
-            // очередь уже непустая, и надпись «Подключение…» исчезнет ровно
-            // тогда, когда Media3 возьмёт управление уведомлением на себя.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                // Функция живёт в companion, а уведомление — метод сервиса.
-                instance?.run {
-                    startForeground(NOTIFICATION_ID, buildPlaceholderNotification())
-                }
-            }
         }
 
         /** Добавляет трек в конец очереди, не прерывая текущий. */

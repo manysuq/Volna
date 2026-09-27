@@ -85,4 +85,11 @@
     <string name="notification_connecting">جارٍ الاتصال…</string>
     <string name="player_shuffle">خلط</string>
     <string name="notice_not_in_music">غير موجود في YouTube Music — نبحث في الفيديوهات عن «%1$s»</string>
+    <string name="tab_downloads">التنزيلات</string>
+    <string name="downloads_empty_title">لا توجد مقاطع منزّلة</string>
+    <string name="downloads_empty_subtitle">اضغط على أيقونة التنزيل لحفظها في Music/Volna</string>
+    <string name="downloads_delete">حذف</string>
+    <string name="downloads_play">تشغيل</string>
+    <string name="download_publish_failed">تعذّر حفظ الملف</string>
+    <string name="downloads_count">%1$d مقطع، %2$s</string>
 </resources>

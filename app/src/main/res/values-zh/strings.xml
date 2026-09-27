@@ -85,4 +85,11 @@
     <string name="notification_connecting">连接中…</string>
     <string name="player_shuffle">打乱</string>
     <string name="notice_not_in_music">YouTube Music 中没有《%1$s》，正在视频中搜索</string>
+    <string name="tab_downloads">已下载</string>
+    <string name="downloads_empty_title">没有已下载的曲目</string>
+    <string name="downloads_empty_subtitle">点击下载图标即可保存到 Music/Volna</string>
+    <string name="downloads_delete">删除</string>
+    <string name="downloads_play">播放</string>
+    <string name="download_publish_failed">无法保存文件</string>
+    <string name="downloads_count">%1$d 首，%2$s</string>
 </resources>

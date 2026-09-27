@@ -110,4 +110,11 @@
     <string name="notification_connecting">Подключение…</string>
     <string name="player_shuffle">Перемешать</string>
     <string name="notice_not_in_music">В YouTube Music нет «%1$s» — ищу в видео</string>
+    <string name="tab_downloads">Треки</string>
+    <string name="downloads_empty_title">Нет скачанных треков</string>
+    <string name="downloads_empty_subtitle">Нажмите значок загрузки на треке — файл сохранится в Music/Volna</string>
+    <string name="downloads_delete">Удалить</string>
+    <string name="downloads_play">Слушать</string>
+    <string name="download_publish_failed">Не удалось сохранить файл в общую папку</string>
+    <string name="downloads_count">%1$d треков, %2$s</string>
 </resources>

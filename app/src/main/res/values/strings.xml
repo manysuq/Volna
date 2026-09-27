@@ -113,4 +113,11 @@
     <string name="notification_connecting">Connecting…</string>
     <string name="player_shuffle">Shuffle</string>
     <string name="notice_not_in_music">Not in YouTube Music — trying videos for “%1$s”</string>
+    <string name="tab_downloads">Downloads</string>
+    <string name="downloads_empty_title">No downloaded tracks</string>
+    <string name="downloads_empty_subtitle">Tap the download icon on any track to save it to Music/Volna</string>
+    <string name="downloads_delete">Delete</string>
+    <string name="downloads_play">Play</string>
+    <string name="download_publish_failed">Could not save the file to shared storage</string>
+    <string name="downloads_count">%1$d tracks, %2$s</string>
 </resources>

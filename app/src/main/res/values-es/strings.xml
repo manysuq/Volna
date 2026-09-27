@@ -85,4 +85,11 @@
     <string name="notification_connecting">Conectando…</string>
     <string name="player_shuffle">Mezclar</string>
     <string name="notice_not_in_music">No está en YouTube Music: buscando en vídeos «%1$s»</string>
+    <string name="tab_downloads">Descargas</string>
+    <string name="downloads_empty_title">No hay pistas descargadas</string>
+    <string name="downloads_empty_subtitle">Toca el icono de descarga para guardarla en Música/Volna</string>
+    <string name="downloads_delete">Eliminar</string>
+    <string name="downloads_play">Escuchar</string>
+    <string name="download_publish_failed">No se pudo guardar el archivo</string>
+    <string name="downloads_count">%1$d pistas, %2$s</string>
 </resources>
