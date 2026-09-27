@@ -11,6 +11,41 @@
 مشغّل موسيقى هادئ لأندرويد. يبحث في **YouTube Music** ويبث الصوت مباشرة — بلا
 تنزيل الملف كاملًا، وبلا إعلانات، وبلا حساب.
 
+## لقطات الشاشة
+
+<table dir="rtl">
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/01-search-light.jpg" alt="01-search" width="100%">
+    <p align="center"><sub>بحث</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/02-search-dark.jpg" alt="02-search" width="100%">
+    <p align="center"><sub>بحث، داكن</sub></p>
+  </td>
+  </tr>
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/03-player-dark.jpg" alt="03-player" width="100%">
+    <p align="center"><sub>قيد التشغيل</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/04-library-light.jpg" alt="04-library" width="100%">
+    <p align="center"><sub>المكتبة</sub></p>
+  </td>
+  </tr>
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/05-artist-dark.jpg" alt="05-artist" width="100%">
+    <p align="center"><sub>الفنان</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/06-search-empty-dark.jpg" alt="06-empty" width="100%">
+    <p align="center"><sub>فارغ</sub></p>
+  </td>
+  </tr>
+</table>
+
 ## ما الذي يفعله
 
 - **البحث في YouTube Music** — المقاطع الرسمية تحمل اسم الفنان والألبوم في
@@ -29,7 +64,8 @@
 - **تشغيل كل أغاني الفنان** — قائمة واحدة مخلوطة من كل ألبوماته.
 - **دون اتصال** — التنزيل إلى مجلد `Music/Volna` المشترك.
 - **سمة داكنة وفاتحة**، Material 3 Expressive.
-- **ست لغات** — الإنجليزية والروسية والفرنسية والإسبانية والصينية والعربية.
+- **ثماني لغات** — الإنجليزية والروسية والأوكرانية والبيلاروسية والفرنسية
+  والإسبانية والصينية والعربية.
 
 ## كيف يعمل
 

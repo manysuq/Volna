@@ -12,6 +12,41 @@ Un reproductor de música tranquilo para Android. Busca en **YouTube Music** y
 reproduce el audio en directo: sin descargar el archivo entero, sin anuncios y
 sin cuenta.
 
+## Capturas de pantalla
+
+<table>
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/01-search-light.jpg" alt="01-search" width="100%">
+    <p align="center"><sub>Búsqueda</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/02-search-dark.jpg" alt="02-search" width="100%">
+    <p align="center"><sub>Búsqueda, oscuro</sub></p>
+  </td>
+  </tr>
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/03-player-dark.jpg" alt="03-player" width="100%">
+    <p align="center"><sub>Sonando</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/04-library-light.jpg" alt="04-library" width="100%">
+    <p align="center"><sub>Biblioteca</sub></p>
+  </td>
+  </tr>
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/05-artist-dark.jpg" alt="05-artist" width="100%">
+    <p align="center"><sub>Artista</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/06-search-empty-dark.jpg" alt="06-empty" width="100%">
+    <p align="center"><sub>Vacío</sub></p>
+  </td>
+  </tr>
+</table>
+
 ## Qué hace
 
 - **Búsqueda en YouTube Music**: las pistas oficiales llevan artista y álbum en el
@@ -31,7 +66,8 @@ sin cuenta.
 - **Escuchar todo de un artista**: un conjunto barajado de todos sus álbumes.
 - **Sin conexión**: descarga a la carpeta compartida `Music/Volna`.
 - **Temas claro y oscuro**, Material 3 Expressive.
-- **Seis idiomas**: inglés, ruso, francés, español, chino, árabe.
+- **Ocho idiomas**: inglés, ruso, ucraniano, bielorruso, francés, español, chino,
+  árabe.
 
 ## Cómo funciona
 

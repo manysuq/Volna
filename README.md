@@ -11,6 +11,41 @@
 A calm music player for Android. It searches **YouTube Music** and streams the
 audio directly — no whole-file download, no ads, no account.
 
+## Screenshots
+
+<table>
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/01-search-light.jpg" alt="01-search" width="100%">
+    <p align="center"><sub>Search</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/02-search-dark.jpg" alt="02-search" width="100%">
+    <p align="center"><sub>Search, dark</sub></p>
+  </td>
+  </tr>
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/03-player-dark.jpg" alt="03-player" width="100%">
+    <p align="center"><sub>Now playing</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/04-library-light.jpg" alt="04-library" width="100%">
+    <p align="center"><sub>Library</sub></p>
+  </td>
+  </tr>
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/05-artist-dark.jpg" alt="05-artist" width="100%">
+    <p align="center"><sub>Artist</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/06-search-empty-dark.jpg" alt="06-empty" width="100%">
+    <p align="center"><sub>Empty state</sub></p>
+  </td>
+  </tr>
+</table>
+
 ## Features
 
 - **YouTube Music search** — official tracks carry artist and album in the
@@ -33,7 +68,8 @@ audio directly — no whole-file download, no ads, no account.
 - **Offline** — download to the shared `Music/Volna` folder, playable without
   network.
 - **Dark and light themes**, Material 3 Expressive.
-- **Six languages** — English, Russian, French, Spanish, Chinese, Arabic.
+- **Eight languages** — English, Russian, Ukrainian, Belarusian, French,
+  Spanish, Chinese, Arabic.
 
 ## How it works
 

@@ -11,6 +11,41 @@
 Un lecteur de musique apaisant pour Android. Il cherche dans **YouTube Music**
 et lit l'audio en direct — sans téléchargement complet, sans pub, sans compte.
 
+## Captures d'écran
+
+<table>
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/01-search-light.jpg" alt="01-search" width="100%">
+    <p align="center"><sub>Recherche</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/02-search-dark.jpg" alt="02-search" width="100%">
+    <p align="center"><sub>Recherche, sombre</sub></p>
+  </td>
+  </tr>
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/03-player-dark.jpg" alt="03-player" width="100%">
+    <p align="center"><sub>En cours</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/04-library-light.jpg" alt="04-library" width="100%">
+    <p align="center"><sub>Médiathèque</sub></p>
+  </td>
+  </tr>
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/05-artist-dark.jpg" alt="05-artist" width="100%">
+    <p align="center"><sub>Artiste</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/06-search-empty-dark.jpg" alt="06-empty" width="100%">
+    <p align="center"><sub>Vide</sub></p>
+  </td>
+  </tr>
+</table>
+
 ## Ce qu'il fait
 
 - **Recherche dans YouTube Music** — les titres officiels affichent l'artiste et
@@ -30,7 +65,8 @@ et lit l'audio en direct — sans téléchargement complet, sans pub, sans compt
 - **Tout écouter par artiste** — un ensemble mélangé sur tous ses albums.
 - **Hors ligne** — téléchargement vers le dossier partagé `Music/Volna`.
 - **Thèmes clair et sombre**, Material 3 Expressive.
-- **Six langues** — anglais, russe, français, espagnol, chinois, arabe.
+- **Huit langues** — anglais, russe, ukrainien, biélorusse, français, espagnol,
+  chinois, arabe.
 
 ## Comment ça marche
 

@@ -11,6 +11,41 @@
 一款安静的 Android 音乐播放器。它在 **YouTube Music** 中搜索并直接串流音频 ——
 不整首下载，没有广告，也不需要账号。
 
+## 截图
+
+<table>
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/01-search-light.jpg" alt="01-search" width="100%">
+    <p align="center"><sub>搜索</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/02-search-dark.jpg" alt="02-search" width="100%">
+    <p align="center"><sub>搜索，深色</sub></p>
+  </td>
+  </tr>
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/03-player-dark.jpg" alt="03-player" width="100%">
+    <p align="center"><sub>正在播放</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/04-library-light.jpg" alt="04-library" width="100%">
+    <p align="center"><sub>音乐库</sub></p>
+  </td>
+  </tr>
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/05-artist-dark.jpg" alt="05-artist" width="100%">
+    <p align="center"><sub>艺人</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/06-search-empty-dark.jpg" alt="06-empty" width="100%">
+    <p align="center"><sub>空状态</sub></p>
+  </td>
+  </tr>
+</table>
+
 ## 功能
 
 - **YouTube Music 搜索** —— 官方歌曲的副标题里带有艺人和专辑，所以一小时的
@@ -27,7 +62,7 @@
 - **播放艺人全部歌曲** —— 把该艺人所有专辑打乱成一个列表。
 - **离线播放** —— 下载到共享的 `Music/Volna` 目录，无网络也能听。
 - **深色与浅色主题**，Material 3 Expressive。
-- **六种语言** —— 英语、俄语、法语、西班牙语、中文、阿拉伯语。
+- **八种语言** —— 英语、俄语、乌克兰语、白俄罗斯语、法语、西班牙语、中文、阿拉伯语。
 
 ## 工作原理
 

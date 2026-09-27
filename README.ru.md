@@ -11,6 +11,41 @@
 Мягкий музыкальный плеер для Android. Ищет треки в **YouTube Music** и стримит
 аудио напрямую — без загрузки файла, без рекламы и без аккаунта.
 
+## Скриншоты
+
+<table>
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/01-search-light.jpg" alt="01-search" width="100%">
+    <p align="center"><sub>Поиск</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/02-search-dark.jpg" alt="02-search" width="100%">
+    <p align="center"><sub>Поиск, тёмная</sub></p>
+  </td>
+  </tr>
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/03-player-dark.jpg" alt="03-player" width="100%">
+    <p align="center"><sub>Сейчас играет</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/04-library-light.jpg" alt="04-library" width="100%">
+    <p align="center"><sub>Медиатека</sub></p>
+  </td>
+  </tr>
+  <tr>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/05-artist-dark.jpg" alt="05-artist" width="100%">
+    <p align="center"><sub>Исполнитель</sub></p>
+  </td>
+  <td width="50%" valign="top">
+    <img src="docs/screenshots/06-search-empty-dark.jpg" alt="06-empty" width="100%">
+    <p align="center"><sub>Пусто</sub></p>
+  </td>
+  </tr>
+</table>
+
 ## Что умеет
 
 - **Поиск в YouTube Music** — у официальных треков исполнитель и альбом уже в
@@ -32,8 +67,8 @@
 - **Слушать всё по исполнителю** — один перемешанный набор по всем его альбомам.
 - **Офлайн** — скачивание в общую папку `Music/Volna`, играется без сети.
 - **Тёмная и светлая тема**, Material 3 Expressive.
-- **Шесть языков** — английский, русский, французский, испанский, китайский,
-  арабский.
+- **Восемь языков** — английский, русский, украинский, белорусский, французский,
+  испанский, китайский, арабский.
 
 ## Как это работает
 
