@@ -221,6 +221,11 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         )
         _playbackError.value = null
         _streamState.value = StreamState.Ready
+        // Счётчик попыток живёт только до первого успеха. Раньше он не
+        // обнулялся здесь, и три ошибки за сессии (на любых треках) выдавали
+        // «сдались», после чего автопереподключение переставало работать до
+        // перезапуска приложения: play() его сбрасывает, а reconnect — нет.
+        retryAttempts = 0
     }
 
     /**

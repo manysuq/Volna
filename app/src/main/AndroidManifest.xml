@@ -39,5 +39,18 @@
                 <action android:name="androidx.media3.session.MediaSessionService" />
             </intent-filter>
         </service>
+
+        <!-- Обязателен для AppCompatDelegate.setApplicationLocales ниже API 33:
+             без него выбранный язык не переживает перезапуск процесса. Нам он
+             не нужен, потому что язык хранится в своих настройках сам
+             (AppLanguage), поэтому автосохранение выключено. -->
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="false" />
+        </service>
     </application>
 </manifest>

@@ -1,7 +1,8 @@
 package com.volna.player.ui.screens
 
 import com.volna.player.R
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -61,6 +62,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -84,7 +86,6 @@ import com.volna.player.download.DownloadState
 import com.volna.player.search.Track
 import com.volna.player.ui.theme.PlaceholderBottom
 import com.volna.player.ui.theme.PlaceholderTop
-import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -128,20 +129,32 @@ fun FullPlayerScreen(
     val isError = streamState is StreamState.Error
     val errorText = (streamState as? StreamState.Error)?.message
 
-    // Свайп вниз закрывает плеер: тянем — экран едет за пальцем
+    // Свайп вниз закрывает плеер: тянем — экран едет за пальцем.
+    //
+    // Два важных решения. Первое: пока палец на экране, анимировать нечего —
+    // offset применяется напрямую, поэтому экран идёт ровно за пальцем.
+    // Раньше здесь стоял animateFloatAsState на каждое значение dragOffset, то
+    // есть к цели применялась ещё и анимация: панель постоянно догоняла
+    // палец и визуально отставала от него примерно на анимацию.
+    // Второе: при сворачивании панель едет вниз, а не исчезает — под ней
+    // виден настоящий экран, а не сплошная заливка фона.
     var dragOffset by remember { mutableFloatStateOf(0f) }
     var collapsing by remember { mutableStateOf(false) }
-    val offset by animateFloatAsState(
-        targetValue = if (collapsing) 1_400f else dragOffset,
-        animationSpec = tween(if (collapsing) 220 else 260),
-        label = "playerOffset",
-    )
+    val collapse = remember { Animatable(0f) }
     LaunchedEffect(collapsing) {
         if (collapsing) {
-            delay(180)
+            // Ждём конца анимации и только потом убираем экран. Раньше стоял
+            // фиксированный delay(180) — панель успевала проехать часть пути
+            // и исчезала на середине, что и читалось как «сворачивание с лагом».
+            collapse.animateTo(1_400f, tween(220, easing = FastOutSlowInEasing))
             onCollapse()
         }
     }
+    val appliedOffset = if (collapsing) collapse.value else dragOffset
+    // Панель не только едет вниз, но и бледнеет: под ней проступает настоящий
+    // экран приложения, к которому мы и возвращаемся. Без этого на всё время
+    // анимации видна сплошная заливка градиента.
+    val panelAlpha = (1f - appliedOffset / 1_400f).coerceIn(0f, 1f)
 
     val topInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
@@ -150,7 +163,8 @@ fun FullPlayerScreen(
         modifier = modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(PlaceholderTop, MaterialTheme.colorScheme.background)))
-            .offset { IntOffset(0, offset.roundToInt()) }
+            .graphicsLayer { alpha = panelAlpha }
+            .offset { IntOffset(0, appliedOffset.roundToInt()) }
             .pointerInput(Unit) {
                 detectVerticalDragGestures(
                     onDragEnd = {

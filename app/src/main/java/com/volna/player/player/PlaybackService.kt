@@ -142,13 +142,13 @@ class PlaybackService : MediaSessionService() {
             _buffering.value = false
             _isPlayingState.value = false
             _error.value = reason
-            // Переподключение имеет смысл только для «поток сломался»:
-            // протухшая ссылка и сетевой сбок лечатся новой ссылкой, а 403 —
-            // нет. Раньше он тоже уходил в переподключение, отсюда было
-            // ощущение, что play надо нажимать несколько раз.
-            if (!isForbidden(error)) {
-                _faults.tryEmit(Unit)
-            }
+            // 403 отправляем на переподключение: ссылка зашита IP клиента и
+            // стареет, поэтому новая ссылка от 403 спасает. Раньше я здесь 403
+            // отсекал, посчитав его «сервер не даст данных» — и автопереподключение
+            // переставало работать совсем: в логе оставалось «переподключаемся»,
+            // а по факту ничего не происходило. Проверено на живых ссылках:
+            // свежая отдаёт 200/206, отработавшая — 403.
+            _faults.tryEmit(Unit)
         }
     }
 
@@ -216,7 +216,6 @@ class PlaybackService : MediaSessionService() {
         private const val NOTIFICATION_CHANNEL_ID = "ytdl_playback"
         private const val NOTIFICATION_ID = 1001
         private const val MAX_CACHE_BYTES = 256L * 1024 * 1024
-        private const val HTTP_FORBIDDEN = 403
         private const val CONNECT_TIMEOUT_MS = 15_000
         private const val READ_TIMEOUT_MS = 20_000
 
@@ -243,10 +242,9 @@ class PlaybackService : MediaSessionService() {
         /**
          * Короткий сигнал «поток упал, переподключись сам».
          *
-         * Сюда не попадает 403: он означает «сервер отказал», а не «поток
-         * сломался», и новая ссылка его не исправит. Раньше 403 уходил в
-         * переподключение, и трек «начинал играть» с третьего нажатия —
-         * на самом деле это был обход запроса без заголовка Range.
+         * Сюда попадает и 403: ссылка зашита IP клиента и стареет,
+         * поэтому свежая ссылка от него спасает. Проверено на живых
+         * потоках: новая отдаёт 200/206, отработавшая — 403.
          */
         private val _faults = MutableSharedFlow<Unit>(extraBufferCapacity = 4)
         val faults: SharedFlow<Unit> = _faults.asSharedFlow()
@@ -395,26 +393,6 @@ class PlaybackService : MediaSessionService() {
         /** Ставит режим повтора: OFF / ALL / ONE. */
         fun setRepeatMode(context: Context, mode: Int) {
             player(context)?.repeatMode = mode
-        }
-
-        /**
-         * Отказ сервера (403), а не обрыв потока.
-         *
-         * Причина лежит в цепочке исключений, а не на верхнем уровне, поэтому
-         * ищем по всей. 403 означает, что сервер не даст данные и с новой
-         * ссылкой, — переподключение тут только тратит время.
-         */
-        private fun isForbidden(error: Throwable): Boolean {
-            var cause: Throwable? = error
-            while (cause != null) {
-                if (cause is HttpDataSource.InvalidResponseCodeException &&
-                    cause.responseCode == HTTP_FORBIDDEN
-                ) {
-                    return true
-                }
-                cause = cause.cause
-            }
-            return false
         }
 
         private fun buildItem(track: Track, url: String): MediaItem =

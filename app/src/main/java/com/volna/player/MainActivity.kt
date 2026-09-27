@@ -6,7 +6,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -57,7 +58,7 @@ import kotlinx.coroutines.delay
 import androidx.compose.ui.res.stringResource
 
 /** Главная активность: поиск, стриминг, каталог и плеер. */
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     // registerForActivityResult обязан вызваться до onStart, поэтому лаунчер
     // создаётся сразу при инициализации, а не внутри askNotificationPermission.
@@ -174,6 +175,25 @@ fun PlayerContent(
     val albums by viewModel.albums.collectAsStateWithLifecycle()
     val albumTracks by viewModel.albumTracks.collectAsStateWithLifecycle()
     val catalogLoading by viewModel.catalogLoading.collectAsStateWithLifecycle()
+
+    // Системный «назад» должен закрывать верхний слой, а не выбрасывать из
+    // приложения. Порядок в списке — это приоритет: верхний слой первый,
+    // то есть полный плеер, потом настройки, потом вкладка альбома или
+    // исполнителя. Если открыт ровно один слой, BackHandler не перехватывает
+    // жест вовсе — тогда нажатие действительно закрывает приложение.
+    val openLayers = listOfNotNull(
+        fullPlayer.takeIf { it }?.let { "player" },
+        showSettings.takeIf { it }?.let { "settings" },
+        (catalogRoute as? CatalogRoute.Album)?.let { "album" },
+        (catalogRoute as? CatalogRoute.Artist)?.let { "artist" },
+    )
+    BackHandler(enabled = openLayers.isNotEmpty()) {
+        when (openLayers.first()) {
+            "player" -> fullPlayer = false
+            "settings" -> showSettings = false
+            else -> catalogRoute = CatalogRoute.Artists
+        }
+    }
 
     // Позиция и состояние плеера
     LaunchedEffect(Unit) {
