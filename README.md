@@ -7,7 +7,7 @@
 # Volna
 
 <p align="center">
-  <a href="https://github.com/manysuq/Volna/releases/tag/v1.0.3"><img alt="⬇ Download" src="https://img.shields.io/badge/v1.0.3-⬇%20Download-2ea44f?style=for-the-badge"></a>
+  <a href="https://github.com/manysuq/Volna/releases/tag/v1.0.4"><img alt="⬇ Download" src="https://img.shields.io/badge/v1.0.4-⬇%20Download-2ea44f?style=for-the-badge"></a>
 </p>
 
 
@@ -110,8 +110,8 @@ Needs JDK 17 and the Android SDK (compileSdk 35).
 Each release build is copied to `dist/`, so builds never overwrite each other:
 
 ```
-dist/volna-1.0.3-release.apk             the normal build, com.volna.player
-dist/volna-1.0.3-FOR_ISLAND-<pkg>.apk    the dynamic-island variant, see below
+dist/volna-1.0.4-release.apk             the normal build, com.volna.player
+dist/volna-1.0.4-FOR_ISLAND-<pkg>.apk    the dynamic-island variant, see below
 ```
 
 Do not use `app/build/outputs/apk/release` — it is a scratch directory that

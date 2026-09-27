@@ -7,7 +7,7 @@
 # Volna
 
 <p align="center">
-  <a href="https://github.com/manysuq/Volna/releases/tag/v1.0.3"><img alt="⬇ 下载" src="https://img.shields.io/badge/v1.0.3-⬇%20下载-2ea44f?style=for-the-badge"></a>
+  <a href="https://github.com/manysuq/Volna/releases/tag/v1.0.4"><img alt="⬇ 下载" src="https://img.shields.io/badge/v1.0.4-⬇%20下载-2ea44f?style=for-the-badge"></a>
 </p>
 
 
@@ -98,8 +98,8 @@ YouTube Music 会给每个结果标上类型（`Song`、`Video`、`Album`、`Pla
 每次发布构建都会复制到 `dist/`，因此各次构建不会互相覆盖：
 
 ```
-dist/volna-1.0.3-release.apk             普通构建，com.volna.player
-dist/volna-1.0.3-FOR_ISLAND-<包名>.apk   灵动岛变体，见下文
+dist/volna-1.0.4-release.apk             普通构建，com.volna.player
+dist/volna-1.0.4-FOR_ISLAND-<包名>.apk   灵动岛变体，见下文
 ```
 
 不要使用 `app/build/outputs/apk/release` —— 那是每次构建都会覆盖的临时目录，
