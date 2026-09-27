@@ -102,6 +102,11 @@ class PlaybackService : MediaSessionService() {
                 /* handleAudioFocus = */ true,
             )
             .setHandleAudioBecomingNoisy(true)
+            // Без вейклока процессор засыпает вместе с экраном, и при выключенном
+            // экране трек подключается, но не играет: буфер пустеет, а поток
+            // воспроизведения стоит, пока пользователь не коснётся экрана. Для
+            // стриминга нужен NETWORK — он держит и CPU, и Wi-Fi.
+            .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
 
         exoPlayer?.addListener(playerListener)
