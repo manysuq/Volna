@@ -7,7 +7,7 @@
 # Volna
 
 <p align="center">
-  <a href="https://github.com/manysuq/Volna/releases/tag/v1.0"><img alt="⬇ Скачать" src="https://img.shields.io/badge/v1.0-⬇%20Скачать-2ea44f?style=for-the-badge"></a>
+  <a href="https://github.com/manysuq/Volna/releases/tag/v1.0.1"><img alt="⬇ Скачать" src="https://img.shields.io/badge/v1.0.1-⬇%20Скачать-2ea44f?style=for-the-badge"></a>
 </p>
 
 
@@ -107,8 +107,8 @@ YouTube Music размечает каждый элемент типом (`Ком
 Каждая сборка релиза копируется в `dist/`, поэтому сборки не затирают друг друга:
 
 ```
-dist/volna-1.0-release.apk             обычная сборка, com.volna.player
-dist/volna-1.0-FOR_ISLAND-<пакет>.apk вариант для динамического острова, см. ниже
+dist/volna-1.0.1-release.apk             обычная сборка, com.volna.player
+dist/volna-1.0.1-FOR_ISLAND-<пакет>.apk вариант для динамического острова, см. ниже
 ```
 
 Папку `app/build/outputs/apk/release` не используй: она служебная и
