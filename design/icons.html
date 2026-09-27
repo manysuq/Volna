@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Волна — иконки</title>
+<style>
+  :root{--bg:#E3EAE7;--ink:#111917;--muted:#394542;--dark:#0C1211;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:32px}
+  h1{font-size:24px;margin:0 0 4px;font-weight:600}
+  .sub{color:var(--muted);margin:0 0 28px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:20px}
+  .card{background:#fff;border-radius:24px;padding:20px;box-shadow:0 2px 10px #11191714}
+  .card h2{font-size:15px;margin:0 0 2px;font-weight:600}
+  .card p{margin:0 0 14px;font-size:12.5px;color:var(--muted);min-height:34px}
+  .row{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+  .tile{width:84px;height:84px;border-radius:20px;display:grid;place-items:center;flex:none}
+  .s48{width:48px;height:48px;border-radius:12px}
+  .s32{width:32px;height:32px;border-radius:8px}
+  .lbl{font-size:11px;color:var(--muted)}
+  .dark{background:var(--dark);color:#DCE4E1}
+  .dark .lbl{color:#8A9694}
+  h3{margin:40px 0 14px;font-size:17px;font-weight:600}
+</style>
+</head>
+<body>
+<h1>Волна — варианты иконки</h1>
+<p class="sub">Приложение для музыки. Показан размер 84, 48 и 32 px, светлая и тёмная подложка.</p>
+<div class="grid" id="grid"></div>
+<h3>Плитки подряд, как в выпадающем списке</h3>
+<div class="row" id="tiles" style="gap:8px"></div>
+<script>
+const C={mint:'#8FF0E1',teal:'#14655C'};
+const icons={
+  wave:{name:'Волна',desc:'Плавная синусоида — сама волна, без буквальности. Самое спокойное.',
+    light:{bg:'linear-gradient(150deg,#CFF3EA,#8FD9C9)',fg:C.teal},
+    dark:{bg:'linear-gradient(150deg,#12413B,#0B2B27)',fg:C.mint},mono:'#FFFFFF',
+    art:'<path d="M22 58c9 0 9-13 18-13s9 13 18 13 9-13 18-13 9 13 18 13" fill="none" stroke="FILL" stroke-width="6.5" stroke-linecap="round"/>'},
+  note:{name:'Нота',desc:'Нота в круге. Понятно сразу, но мягко — без чёрных заливок.',
+    light:{bg:'linear-gradient(150deg,#DCE9F2,#B9CFDF)',fg:'#2E5570'},
+    dark:{bg:'linear-gradient(150deg,#16303F,#0E1F29)',fg:'#A8D3EC'},mono:'#FFFFFF',
+    art:'<path d="M62 30v34.5a12 12 0 1 1-6-10.4V40l20-5v22.5a12 12 0 1 1-6-10.4V28z" fill="FILL"/>'},
+  bars:{name:'Ритм',desc:'Три мягкие полоски разной высоты. Читается даже в 32 px.',
+    light:{bg:'linear-gradient(150deg,#EFE6DC,#DCC7B2)',fg:'#6B4A2F'},
+    dark:{bg:'linear-gradient(150deg,#3A2E22,#241C14)',fg:'#E6C79E'},mono:'#FFFFFF',
+    art:'<rect x="30" y="46" width="11" height="24" rx="5.5" fill="FILL"/><rect x="48.5" y="34" width="11" height="36" rx="5.5" fill="FILL"/><rect x="67" y="52" width="11" height="18" rx="5.5" fill="FILL"/>'},
+  circle:{name:'Круг',desc:'Концентрические круги — как виниловая пластинка. Самое «спокойное».',
+    light:{bg:'linear-gradient(150deg,#D9E8DF,#A9C9B8)',fg:'#204A38'},
+    dark:{bg:'linear-gradient(150deg,#0F3A2C,#0A241B)',fg:'#9EE7C4'},mono:'#FFFFFF',
+    art:'<circle cx="54" cy="54" r="21" fill="none" stroke="FILL" stroke-width="6"/><circle cx="54" cy="54" r="9" fill="FILL"/>'},
+  play:{name:'Играть',desc:'Мягкий треугольник в скруглённой рамке. Самое узнаваемое.',
+    light:{bg:'linear-gradient(150deg,#E3E0F2,#C4BEDF)',fg:'#4A3D7A'},
+    dark:{bg:'linear-gradient(150deg,#2A2540,#1A1730)',fg:'#CFC4F2'},mono:'#FFFFFF',
+    art:'<rect x="26" y="26" width="56" height="56" rx="20" fill="none" stroke="FILL" stroke-width="6"/><path d="M47 42.5l20 11.5-20 11.5z" fill="FILL"/>'},
+  drop:{name:'Капля',desc:'Плавная капля — отсылка к звуку. Хорошо смотрится в крупном размере.',
+    light:{bg:'linear-gradient(150deg,#D6E9F5,#AFCFE6)',fg:'#28536E'},
+    dark:{bg:'linear-gradient(150deg,#123243,#0C2029)',fg:'#A5D3EE'},mono:'#FFFFFF',
+    art:'<path d="M54 26c13 16 21 26 21 34a21 21 0 1 1-42 0c0-8 8-18 21-34z" fill="FILL"/>'},
+  orb:{name:'Сфера',desc:'Сфера с бликом. Спокойнее остальных, хорошо смотрится в 32 px.',
+    light:{bg:'linear-gradient(150deg,#F0E3E0,#D8BCB6)',fg:'#7A4438'},
+    dark:{bg:'linear-gradient(150deg,#3D2622,#251614)',fg:'#EFBEB1'},mono:'#FFFFFF',
+    art:'<circle cx="54" cy="56" r="22" fill="FILL"/><circle cx="45" cy="46" r="6" fill="#FFFFFF" fill-opacity=".55"/>'},
+  arc:{name:'Дуга',desc:'Две дуги как звуковая волна. Минималистично и очень «мягко».',
+    light:{bg:'linear-gradient(150deg,#DDE8E3,#BACFC6)',fg:'#1F5544'},
+    dark:{bg:'linear-gradient(150deg,#0F3A2E,#0A221A)',fg:'#94E2BE'},mono:'#FFFFFF',
+    art:'<path d="M32 62a22 22 0 0 1 44 0" fill="none" stroke="FILL" stroke-width="6.5" stroke-linecap="round"/><path d="M43 62a11 11 0 0 1 22 0" fill="none" stroke="FILL" stroke-width="6.5" stroke-linecap="round"/>'}
+};
+function svg(icon,fill,px){
+  const art=icon.art.replace(/FILL/g,fill),s=px||84;
+  return `<svg width="${s}" height="${s}" viewBox="0 0 108 108" fill="none" xmlns="http://www.w3.org/2000/svg">${art}</svg>`;
+}
+function tile(icon,variant,px,cls){
+  const v=icon[variant];
+  return `<div class="tile ${cls||''}" style="background:${v.bg}">${svg(icon,v.fg,px)}</div>`;
+}
+document.getElementById('grid').innerHTML=Object.values(icons).map(i=>`
+  <div class="card">
+    <h2>${i.name}</h2><p>${i.desc}</p>
+    <div class="row">${tile(i,'light')}<div><div class="lbl">84 px</div>
+      <div class="row" style="margin:6px 0 0;gap:8px">${tile(i,'light',48)}${tile(i,'light',32)}</div></div></div>
+    <div class="row dark" style="padding:12px;border-radius:20px">
+      ${tile(i,'dark')}<div class="lbl">тёмная подложка</div></div>
+    <div class="row" style="margin-top:12px">
+      <div class="tile" style="background:#000">${svg(i,i.mono,48)}</div>
+      <div class="lbl">monochrome<br>для тем Android 13+</div></div>
+  </div>`).join('');
+document.getElementById('tiles').innerHTML=Object.values(icons)
+  .map(i=>`<div class="tile" style="width:56px;height:56px;background:${i.light.bg};border-radius:16px">${svg(i,i.light.fg,56)}</div>`).join('');
+</script>
+</body>
+</html>

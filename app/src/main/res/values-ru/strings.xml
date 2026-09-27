@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Русский перевод. Набор ключей должен совпадать с values/strings.xml. -->
+<resources>
+    <string name="app_name">Волна</string>
+
+    <!-- Разделы боковой навигации -->
+    <string name="tab_search">Поиск</string>
+    <string name="tab_albums">Альбомы</string>
+    <string name="tab_similar">Похожее</string>
+
+    <!-- Поиск -->
+    <string name="search_hint">Название трека или исполнителя</string>
+    <string name="search_action">Искать</string>
+    <string name="search_clear">Очистить</string>
+    <string name="search_loading">Ищем в YouTube Music…</string>
+    <string name="search_error_title">Не получилось найти</string>
+    <string name="search_empty_title">Найдите свой трек</string>
+    <string name="search_empty_subtitle">Введите название песни или группы — найдём и включим</string>
+
+    <!-- Альбомы и исполнители -->
+    <string name="artist_hint">Исполнитель</string>
+    <string name="artist_empty_title">Найдите исполнителя</string>
+    <string name="artist_empty_subtitle">Введите имя — покажем его альбомы</string>
+    <string name="albums_title">Альбомы</string>
+    <string name="albums_empty">Альбомы не найдены</string>
+
+    <!-- Похожее -->
+    <string name="similar_hint_title">Включите трек</string>
+    <string name="similar_hint_subtitle">Здесь появятся похожие — по стилю и исполнителю</string>
+    <string name="similar_loading">Подбираем похожее…</string>
+    <string name="similar_empty_title">Похожее не нашлось</string>
+    <string name="similar_empty_subtitle">Попробуйте другой трек</string>
+
+    <!-- Плеер -->
+    <string name="player_connecting">Подключаем…</string>
+    <string name="player_play">Играть</string>
+    <string name="player_pause">Пауза</string>
+    <string name="player_now_playing">Сейчас играет</string>
+    <string name="player_collapse">Свернуть плеер</string>
+    <string name="player_back_15">Назад 15 секунд</string>
+    <string name="player_forward_15">Вперёд 15 секунд</string>
+    <string name="player_previous">Предыдущий трек</string>
+    <string name="player_next">Следующий трек</string>
+    <string name="player_repeat">Повтор</string>
+    <string name="player_retry">Повторить</string>
+    <string name="player_share">Поделиться</string>
+    <string name="player_share_chooser">Поделиться треком</string>
+    <string name="player_streaming">Стрим с YouTube · файл не сохраняется</string>
+
+    <!-- Загрузки -->
+    <string name="download_action">Скачать</string>
+    <string name="download_track">Скачать трек</string>
+    <string name="download_cancel">Отменить</string>
+    <string name="download_progress">Скачиваем… %1$d%%</string>
+    <string name="download_done">Скачано</string>
+    <string name="download_listen">Слушать</string>
+
+    <!-- Тема -->
+    <string name="theme_light">Светлая тема</string>
+    <string name="theme_dark">Тёмная тема</string>
+
+    <!-- Ошибки -->
+    <string name="error_no_stream">YouTube не отдаёт аудио для этого трека</string>
+    <string name="error_retry_prompt">Поток отдаётся плохо. Нажмите «Повторить»</string>
+    <string name="error_no_url">Не удалось получить ссылку на трек</string>
+    <string name="error_stream_gave_up">Поток не отдаётся. Нажмите «Повторить»</string>
+    <string name="error_not_found_on_youtube">Не нашли «%1$s» на YouTube</string>
+
+    <!-- Ошибки сети: показываются пользователю -->
+    <string name="net_403">YouTube отклонил поток (403) — переподключаемся</string>
+    <string name="net_404">Поток не найден на сервере (404)</string>
+    <string name="net_5xx">Ошибка сервера YouTube (%1$d)</string>
+    <string name="net_http">Ошибка сети: HTTP %1$d</string>
+    <string name="net_no_access">Нет доступа к сети</string>
+    <string name="net_timeout">Сеть не отвечает (таймаут)</string>
+    <string name="net_tls">TLS-ошибка — похоже, соединение режет VPN</string>
+    <string name="net_player">Ошибка плеера: %1$s</string>
+
+    <!-- Уведомление -->
+    <string name="notification_channel">Воспроизведение</string>
+    <string name="notification_connecting">Подключение…</string>
+</resources>

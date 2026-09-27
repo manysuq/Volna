@@ -1,0 +1,33 @@
+{
+ "musicListItemWrapperModel": {
+  "musicListItemData": {
+   "title": "Группа крови",
+   "subtitle": "Композиция • Кино",
+   "thumbnail": {
+    "image": {
+     "sources": [
+      {
+       "url": "https://yt3.googleusercontent.com/mkZrA1riBktlNaTUntyqyQjm07WeJhBG3_lGXRO-VxKOn0vnRvVyOWe-cVWqKP1LTvpCAxum284WBBo=w60-h60-l90-rj",
+       "width": 60,
+       "height": 60
+      },
+      {
+       "url": "https://yt3.googleusercontent.com/mkZrA1riBktlNaTUntyqyQjm07WeJhBG3_lGXRO-VxKOn0vnRvVyOWe-cVWqKP1LTvpCAxum284WBBo=w120-h120-l90-rj",
+       "width": 120,
+       "height": 120
+      }
+     ]
+    },
+    "contentMode": "CONTENT_MODE_SCALE_ASPECT_FIT",
+    "cropOptions": "MUSIC_THUMBNAIL_CROP_OPTIONS_UNSPECIFIED"
+   },
+   "onTap": {
+    "innertubeCommand": {
+     "watchEndpoint": {
+      "videoId": "EByofhvVRco"
+     }
+    }
+   }
+  }
+ }
+}

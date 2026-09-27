@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Иконка приложения. Контуры те же, что в design/icons.html (вариант «Волна»). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path
+        android:pathData="M22,58c9,0 9,-13 18,-13s9,13 18,13 9,-13 18,-13 9,13 18,13"
+        android:strokeColor="#8FF0E1"
+        android:strokeWidth="6.5"
+        android:strokeLineCap="round" />
+</vector>
+

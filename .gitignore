@@ -1,0 +1,23 @@
+# Сборка
+build/
+.gradle/
+.kotlin/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+
+# Локальное окружение: путь к SDK у каждого свой
+local.properties
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Прочее
+captures/
+.externalNativeBuild/
+.cxx/
+node_modules/

@@ -1,0 +1,530 @@
+{
+ "musicResponsiveListItemRenderer": {
+  "trackingParams": "CM8CEOFnGAAiEwilyKbotI2XAxU_hIwIHb7DLyw=",
+  "thumbnail": {
+   "musicThumbnailRenderer": {
+    "thumbnail": {
+     "thumbnails": [
+      {
+       "url": "https://yt3.googleusercontent.com/mkZrA1riBktlNaTUntyqyQjm07WeJhBG3_lGXRO-VxKOn0vnRvVyOWe-cVWqKP1LTvpCAxum284WBBo=w60-h60-l90-rj",
+       "width": 60,
+       "height": 60
+      },
+      {
+       "url": "https://yt3.googleusercontent.com/mkZrA1riBktlNaTUntyqyQjm07WeJhBG3_lGXRO-VxKOn0vnRvVyOWe-cVWqKP1LTvpCAxum284WBBo=w120-h120-l90-rj",
+       "width": 120,
+       "height": 120
+      }
+     ]
+    },
+    "thumbnailCrop": "MUSIC_THUMBNAIL_CROP_UNSPECIFIED",
+    "thumbnailScale": "MUSIC_THUMBNAIL_SCALE_ASPECT_FIT",
+    "trackingParams": "CN8CEIS_AiITCKXIpui0jZcDFT-EjAgdvsMvLA=="
+   }
+  },
+  "overlay": {
+   "musicItemThumbnailOverlayRenderer": {
+    "background": {
+     "verticalGradient": {
+      "gradientLayerColors": [
+       "3422552064",
+       "3422552064"
+      ]
+     }
+    },
+    "content": {
+     "musicPlayButtonRenderer": {
+      "playNavigationEndpoint": {
+       "clickTrackingParams": "CN4CEMjeAiITCKXIpui0jZcDFT-EjAgdvsMvLMoBBMB3h10=",
+       "watchEndpoint": {
+        "videoId": "EByofhvVRco",
+        "watchEndpointMusicSupportedConfigs": {
+         "watchEndpointMusicConfig": {
+          "musicVideoType": "MUSIC_VIDEO_TYPE_ATV"
+         }
+        }
+       }
+      },
+      "trackingParams": "CN4CEMjeAiITCKXIpui0jZcDFT-EjAgdvsMvLA==",
+      "playIcon": {
+       "iconType": "PLAY_ARROW"
+      },
+      "pauseIcon": {
+       "iconType": "PAUSE"
+      },
+      "iconColor": 4294967295,
+      "backgroundColor": 0,
+      "activeBackgroundColor": 0,
+      "loadingIndicatorColor": 14745645,
+      "playingIcon": {
+       "iconType": "VOLUME_UP"
+      },
+      "iconLoadingColor": 0,
+      "activeScaleFactor": 1,
+      "buttonSize": "MUSIC_PLAY_BUTTON_SIZE_SMALL",
+      "rippleTarget": "MUSIC_PLAY_BUTTON_RIPPLE_TARGET_SELF",
+      "accessibilityPlayData": {
+       "accessibilityData": {
+        "label": "Группа крови - Кино – воспроизвести"
+       }
+      },
+      "accessibilityPauseData": {
+       "accessibilityData": {
+        "label": "Группа крови - Кино – приостановить воспроизведение"
+       }
+      }
+     }
+    },
+    "contentPosition": "MUSIC_ITEM_THUMBNAIL_OVERLAY_CONTENT_POSITION_CENTERED",
+    "displayStyle": "MUSIC_ITEM_THUMBNAIL_OVERLAY_DISPLAY_STYLE_PERSISTENT"
+   }
+  },
+  "flexColumns": [
+   {
+    "musicResponsiveListItemFlexColumnRenderer": {
+     "text": {
+      "runs": [
+       {
+        "text": "Группа крови",
+        "navigationEndpoint": {
+         "clickTrackingParams": "CM8CEOFnGAAiEwilyKbotI2XAxU_hIwIHb7DLyyaAQMQ9CTKAQTAd4dd",
+         "watchEndpoint": {
+          "videoId": "EByofhvVRco",
+          "watchEndpointMusicSupportedConfigs": {
+           "watchEndpointMusicConfig": {
+            "musicVideoType": "MUSIC_VIDEO_TYPE_ATV"
+           }
+          }
+         }
+        }
+       }
+      ]
+     },
+     "displayPriority": "MUSIC_RESPONSIVE_LIST_ITEM_COLUMN_DISPLAY_PRIORITY_HIGH"
+    }
+   },
+   {
+    "musicResponsiveListItemFlexColumnRenderer": {
+     "text": {
+      "runs": [
+       {
+        "text": "Композиция"
+       },
+       {
+        "text": " • "
+       },
+       {
+        "text": "Кино",
+        "navigationEndpoint": {
+         "clickTrackingParams": "CM8CEOFnGAAiEwilyKbotI2XAxU_hIwIHb7DLyzKAQTAd4dd",
+         "browseEndpoint": {
+          "browseId": "UCL9NQ06h7I0CRUcGxPWMtkQ",
+          "browseEndpointContextSupportedConfigs": {
+           "browseEndpointContextMusicConfig": {
+            "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+           }
+          }
+         }
+        }
+       }
+      ],
+      "accessibility": {
+       "accessibilityData": {
+        "label": "Композиция • Кино"
+       }
+      }
+     },
+     "displayPriority": "MUSIC_RESPONSIVE_LIST_ITEM_COLUMN_DISPLAY_PRIORITY_HIGH"
+    }
+   },
+   {
+    "musicResponsiveListItemFlexColumnRenderer": {
+     "text": {
+      "runs": [
+       {
+        "text": "40 млн прослушиваний"
+       }
+      ],
+      "accessibility": {
+       "accessibilityData": {
+        "label": "40 миллионов прослушиваний"
+       }
+      }
+     },
+     "displayPriority": "MUSIC_RESPONSIVE_LIST_ITEM_COLUMN_DISPLAY_PRIORITY_HIGH"
+    }
+   }
+  ],
+  "menu": {
+   "menuRenderer": {
+    "items": [
+     {
+      "menuNavigationItemRenderer": {
+       "text": {
+        "runs": [
+         {
+          "text": "Включить микс"
+         }
+        ]
+       },
+       "icon": {
+        "iconType": "MIX"
+       },
+       "navigationEndpoint": {
+        "clickTrackingParams": "CN0CEJvzBRgAIhMIpcim6LSNlwMVP4SMCB2-wy8smgEDEPQkygEEwHeHXQ==",
+        "watchEndpoint": {
+         "videoId": "EByofhvVRco",
+         "playlistId": "RDAMVMEByofhvVRco",
+         "params": "wAEB",
+         "playerParams": "0gcJCZMAzrrq_1rT",
+         "loggingContext": {
+          "vssLoggingContext": {
+           "serializedContextData": "GhFSREFNVk1FQnlvZmh2VlJjbw%3D%3D"
+          }
+         },
+         "watchEndpointMusicSupportedConfigs": {
+          "watchEndpointMusicConfig": {
+           "musicVideoType": "MUSIC_VIDEO_TYPE_ATV"
+          }
+         }
+        }
+       },
+       "trackingParams": "CN0CEJvzBRgAIhMIpcim6LSNlwMVP4SMCB2-wy8s"
+      }
+     },
+     {
+      "menuServiceItemRenderer": {
+       "text": {
+        "runs": [
+         {
+          "text": "Включить следующим"
+         }
+        ]
+       },
+       "icon": {
+        "iconType": "QUEUE_PLAY_NEXT"
+       },
+       "serviceEndpoint": {
+        "clickTrackingParams": "CNsCEL7uBRgBIhMIpcim6LSNlwMVP4SMCB2-wy8sygEEwHeHXQ==",
+        "queueAddEndpoint": {
+         "queueTarget": {
+          "videoId": "EByofhvVRco",
+          "onEmptyQueue": {
+           "clickTrackingParams": "CNsCEL7uBRgBIhMIpcim6LSNlwMVP4SMCB2-wy8sygEEwHeHXQ==",
+           "watchEndpoint": {
+            "videoId": "EByofhvVRco"
+           }
+          }
+         },
+         "queueInsertPosition": "INSERT_AFTER_CURRENT_VIDEO",
+         "commands": [
+          {
+           "clickTrackingParams": "CNsCEL7uBRgBIhMIpcim6LSNlwMVP4SMCB2-wy8sygEEwHeHXQ==",
+           "addToToastAction": {
+            "item": {
+             "notificationTextRenderer": {
+              "successResponseText": {
+               "runs": [
+                {
+                 "text": "Композиция прозвучит следующей."
+                }
+               ]
+              },
+              "trackingParams": "CNwCEMrHAyITCKXIpui0jZcDFT-EjAgdvsMvLA=="
+             }
+            }
+           }
+          }
+         ]
+        }
+       },
+       "trackingParams": "CNsCEL7uBRgBIhMIpcim6LSNlwMVP4SMCB2-wy8s"
+      }
+     },
+     {
+      "menuServiceItemRenderer": {
+       "text": {
+        "runs": [
+         {
+          "text": "Добавить в очередь"
+         }
+        ]
+       },
+       "icon": {
+        "iconType": "ADD_TO_REMOTE_QUEUE"
+       },
+       "serviceEndpoint": {
+        "clickTrackingParams": "CNkCEPvvBRgCIhMIpcim6LSNlwMVP4SMCB2-wy8sygEEwHeHXQ==",
+        "queueAddEndpoint": {
+         "queueTarget": {
+          "videoId": "EByofhvVRco",
+          "onEmptyQueue": {
+           "clickTrackingParams": "CNkCEPvvBRgCIhMIpcim6LSNlwMVP4SMCB2-wy8sygEEwHeHXQ==",
+           "watchEndpoint": {
+            "videoId": "EByofhvVRco",
+            "playerParams": "0gcJCb8KYeQlTpbE"
+           }
+          }
+         },
+         "queueInsertPosition": "INSERT_AT_END",
+         "commands": [
+          {
+           "clickTrackingParams": "CNkCEPvvBRgCIhMIpcim6LSNlwMVP4SMCB2-wy8sygEEwHeHXQ==",
+           "addToToastAction": {
+            "item": {
+             "notificationTextRenderer": {
+              "successResponseText": {
+               "runs": [
+                {
+                 "text": "Композиция добавлена в очередь."
+                }
+               ]
+              },
+              "trackingParams": "CNoCEMrHAyITCKXIpui0jZcDFT-EjAgdvsMvLA=="
+             }
+            }
+           }
+          }
+         ]
+        }
+       },
+       "trackingParams": "CNkCEPvvBRgCIhMIpcim6LSNlwMVP4SMCB2-wy8s"
+      }
+     },
+     {
+      "toggleMenuServiceItemRenderer": {
+       "defaultText": {
+        "runs": [
+         {
+          "text": "Добавить в понравившиеся"
+         }
+        ]
+       },
+       "defaultIcon": {
+        "iconType": "FAVORITE"
+       },
+       "defaultServiceEndpoint": {
+        "clickTrackingParams": "CNcCEIyfBhgDIhMIpcim6LSNlwMVP4SMCB2-wy8sygEEwHeHXQ==",
+        "modalEndpoint": {
+         "modal": {
+          "modalWithTitleAndButtonRenderer": {
+           "title": {
+            "runs": [
+             {
+              "text": "Войдите в аккаунт"
+             }
+            ]
+           },
+           "content": {
+            "runs": [
+             {
+              "text": "Чтобы оценивать ролики и треки, нужно войти в аккаунт."
+             }
+            ]
+           },
+           "button": {
+            "buttonRenderer": {
+             "style": "STYLE_BLUE_TEXT",
+             "isDisabled": false,
+             "text": {
+              "runs": [
+               {
+                "text": "Войти"
+               }
+              ]
+             },
+             "navigationEndpoint": {
+              "clickTrackingParams": "CNgCEPBbIhMIpcim6LSNlwMVP4SMCB2-wy8sygEEwHeHXQ==",
+              "signInEndpoint": {
+               "hack": true
+              }
+             },
+             "trackingParams": "CNgCEPBbIhMIpcim6LSNlwMVP4SMCB2-wy8s"
+            }
+           }
+          }
+         }
+        }
+       },
+       "toggledText": {
+        "runs": [
+         {
+          "text": "Удалить из понравившихся"
+         }
+        ]
+       },
+       "toggledIcon": {
+        "iconType": "UNFAVORITE"
+       },
+       "trackingParams": "CNcCEIyfBhgDIhMIpcim6LSNlwMVP4SMCB2-wy8s"
+      }
+     },
+     {
+      "menuServiceItemDownloadRenderer": {
+       "serviceEndpoint": {
+        "clickTrackingParams": "CNYCENGqBRgEIhMIpcim6LSNlwMVP4SMCB2-wy8sygEEwHeHXQ==",
+        "offlineVideoEndpoint": {
+         "videoId": "EByofhvVRco",
+         "onAddCommand": {
+          "clickTrackingParams": "CNYCENGqBRgEIhMIpcim6LSNlwMVP4SMCB2-wy8sygEEwHeHXQ==",
+          "getDownloadActionCommand": {
+           "videoId": "EByofhvVRco",
+           "params": "CAI%3D"
+          }
+         }
+        }
+       },
+       "trackingParams": "CNYCENGqBRgEIhMIpcim6LSNlwMVP4SMCB2-wy8s",
+       "badgeIcon": {
+        "iconType": "PREMIUM_STANDALONE_CAIRO"
+       }
+      }
+     },
+     {
+      "menuNavigationItemRenderer": {
+       "text": {
+        "runs": [
+         {
+          "text": "Добавить в плейлист"
+         }
+        ]
+       },
+       "icon": {
+        "iconType": "ADD_TO_PLAYLIST"
+       },
+       "navigationEndpoint": {
+        "clickTrackingParams": "CNQCEMOUBhgFIhMIpcim6LSNlwMVP4SMCB2-wy8sygEEwHeHXQ==",
+        "modalEndpoint": {
+         "modal": {
+          "modalWithTitleAndButtonRenderer": {
+           "title": {
+            "runs": [
+             {
+              "text": "Войдите в аккаунт"
+             }
+            ]
+           },
+           "content": {
+            "runs": [
+             {
+              "text": "Чтобы создавать плейлисты и отправлять их другим пользователям, нужно войти в аккаунт."
+             }
+            ]
+           },
+           "button": {
+            "buttonRenderer": {
+             "style": "STYLE_BLUE_TEXT",
+             "isDisabled": false,
+             "text": {
+              "runs": [
+               {
+                "text": "Войти"
+               }
+              ]
+             },
+             "navigationEndpoint": {
+              "clickTrackingParams": "CNUCEPBbIhMIpcim6LSNlwMVP4SMCB2-wy8sygEEwHeHXQ==",
+              "signInEndpoint": {
+               "hack": true
+              }
+             },
+             "trackingParams": "CNUCEPBbIhMIpcim6LSNlwMVP4SMCB2-wy8s"
+            }
+           }
+          }
+         }
+        }
+       },
+       "trackingParams": "CNQCEMOUBhgFIhMIpcim6LSNlwMVP4SMCB2-wy8s"
+      }
+     },
+     {
+      "menuNavigationItemRenderer": {
+       "text": {
+        "runs": [
+         {
+          "text": "Открыть альбом"
+         }
+        ]
+       },
+       "icon": {
+        "iconType": "ALBUM"
+       },
+       "navigationEndpoint": {
+        "clickTrackingParams": "CNMCEI_7BRgGIhMIpcim6LSNlwMVP4SMCB2-wy8sygEEwHeHXQ==",
+        "browseEndpoint": {
+         "browseId": "MPREb_xMOm3jP71nS",
+         "browseEndpointContextSupportedConfigs": {
+          "browseEndpointContextMusicConfig": {
+           "pageType": "MUSIC_PAGE_TYPE_ALBUM"
+          }
+         }
+        }
+       },
+       "trackingParams": "CNMCEI_7BRgGIhMIpcim6LSNlwMVP4SMCB2-wy8s"
+      }
+     },
+     {
+      "menuNavigationItemRenderer": {
+       "text": {
+        "runs": [
+         {
+          "text": "Перейти на страницу исполнителя"
+         }
+        ]
+       },
+       "icon": {
+        "iconType": "ARTIST"
+       },
+       "navigationEndpoint": {
+        "clickTrackingParams": "CNICEJD7BRgHIhMIpcim6LSNlwMVP4SMCB2-wy8sygEEwHeHXQ==",
+        "browseEndpoint": {
+         "browseId": "UCL9NQ06h7I0CRUcGxPWMtkQ",
+         "browseEndpointContextSupportedConfigs": {
+          "browseEndpointContextMusicConfig": {
+           "pageType": "MUSIC_PAGE_TYPE_ARTIST"
+          }
+         }
+        }
+       },
+       "trackingParams": "CNICEJD7BRgHIhMIpcim6LSNlwMVP4SMCB2-wy8s"
+      }
+     },
+     {
+      "menuNavigationItemRenderer": {
+       "text": {
+        "runs": [
+         {
+          "text": "Поделиться"
+         }
+        ]
+       },
+       "icon": {
+        "iconType": "SHARE"
+       },
+       "navigationEndpoint": {
+        "clickTrackingParams": "CNECEJH7BRgIIhMIpcim6LSNlwMVP4SMCB2-wy8sygEEwHeHXQ==",
+        "shareEntityEndpoint": {
+         "serializedShareEntity": "CgtFQnlvZmh2VlJjbw%3D%3D",
+         "sharePanelType": "SHARE_PANEL_TYPE_UNIFIED_SHARE_PANEL"
+        }
+       },
+       "trackingParams": "CNECEJH7BRgIIhMIpcim6LSNlwMVP4SMCB2-wy8s"
+      }
+     }
+    ],
+    "trackingParams": "CNACEKc7IhMIpcim6LSNlwMVP4SMCB2-wy8s",
+    "accessibility": {
+     "accessibilityData": {
+      "label": "Меню действий"
+     }
+    }
+   }
+  },
+  "playlistItemData": {
+   "videoId": "EByofhvVRco"
+  },
+  "flexColumnDisplayStyle": "MUSIC_RESPONSIVE_LIST_ITEM_FLEX_COLUMN_DISPLAY_STYLE_TWO_LINE_STACK",
+  "itemHeight": "MUSIC_RESPONSIVE_LIST_ITEM_HEIGHT_TALL"
+ }
+}

@@ -1,0 +1,28 @@
+{
+ "musicListItemWrapperModel": {
+  "musicListItemData": {
+   "title": "Виктор Цой - Группа Крови",
+   "subtitle": "Видео • foleywarlocks",
+   "thumbnail": {
+    "image": {
+     "sources": [
+      {
+       "url": "https://i.ytimg.com/vi/xKpzH5bxYsk/hqdefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCggAEOADGC0guwJIWg&rs=AMzJL3mNtN-q1KiaOh4tkVPPEhF9nuaKSg",
+       "width": 400,
+       "height": 225
+      }
+     ]
+    },
+    "contentMode": "CONTENT_MODE_SCALE_ASPECT_FIT",
+    "cropOptions": "MUSIC_THUMBNAIL_CROP_OPTIONS_UNSPECIFIED"
+   },
+   "onTap": {
+    "innertubeCommand": {
+     "watchEndpoint": {
+      "videoId": "xKpzH5bxYsk"
+     }
+    }
+   }
+  }
+ }
+}
