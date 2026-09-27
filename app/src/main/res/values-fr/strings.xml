@@ -113,4 +113,6 @@
     <string name="added_to_playlist">Ajouté à « %1$s »</string>
     <string name="downloads_title">Téléchargés</string>
     <string name="library_play">Écouter</string>
+    <string name="error_artist_no_tracks">Aucun titre trouvé pour cet artiste</string>
+    <string name="artist_play_all">Tout écouter</string>
 </resources>

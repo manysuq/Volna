@@ -141,4 +141,6 @@
     <string name="added_to_playlist">Added to %1$s</string>
     <string name="downloads_title">Downloaded</string>
     <string name="library_play">Play</string>
+    <string name="error_artist_no_tracks">No tracks found for this artist</string>
+    <string name="artist_play_all">Play all</string>
 </resources>

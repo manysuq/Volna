@@ -108,9 +108,6 @@ class PlaybackService : MediaSessionService() {
         mediaSession = MediaSession.Builder(this, exoPlayer!!).build()
     }
 
-    /** Пока ли ours заглушка, а не уведомление Media3. */
-    private var placeholderShown = false
-
     private val playerListener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             _buffering.value = playbackState == Player.STATE_BUFFERING
@@ -120,11 +117,6 @@ class PlaybackService : MediaSessionService() {
             // оно уводило бы воспроизведение не туда.
             if (playbackState == Player.STATE_ENDED) {
                 _trackFinished.tryEmit(exoPlayer?.currentMediaItem?.mediaId)
-            }
-            // Реальное состояние дошло до Media3: он теперь отвечает за
-            // уведомление, и наша надпись «Подключение…» должна уйти.
-            if (playbackState == Player.STATE_READY) {
-                placeholderShown = false
             }
         }
 
@@ -150,7 +142,6 @@ class PlaybackService : MediaSessionService() {
             _buffering.value = false
             _isPlayingState.value = false
             _error.value = reason
-            clearPlaceholder()
             // 403 отправляем на переподключение: ссылка зашита IP клиента и
             // стареет, поэтому новая ссылка от 403 спасает. Раньше я здесь 403
             // отсекал, посчитав его «сервер не даст данных» — и автопереподключение
@@ -162,69 +153,22 @@ class PlaybackService : MediaSessionService() {
     }
 
     /**
-     * Media3 уходит в foreground только когда воспроизведение реально
-     * стартовало. Но система требует startForeground() в течение 5 секунд
-     * после startForegroundService(), поэтому заглушечный вызов нужен.
+     * Уведомление в шторке и управление в динамическом острове.
      *
-     * Само уведомление показываем не всегда: сервис поднимается заранее
-     * (при запуске приложения, ради готовности плеера), и постоянная надпись
-     * «Подключение…» висела бы в шторке даже когда ничего не играет.
-     */
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val result = super.onStartCommand(intent, flags, startId)
-        // Заглушку ставим только если плеер действительно что-то запускает.
-        // Раньше условием была непустая очередь, но очередь переживает паузу
-        // и прошлую сессию, поэтому при каждом запуске приложения в шторке
-        // появлялось «Подключение…» навсегда — играть было никому.
-        val player = exoPlayer
-        if (player != null && player.playbackState != Player.STATE_IDLE) {
-            showPlaceholder()
-        }
-        return result
-    }
-
-    /** Показывает «Подключение…» поверх пустого уведомления Media3. */
-    private fun showPlaceholder() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
-        placeholderShown = true
-        startForeground(NOTIFICATION_ID, buildPlaceholderNotification())
-    }
-
-    /**
-     * Убирает заглушку, если Media3 ещё не перехватил уведомление.
+     * Свое уведомление здесь было лишним звеном и главным источником багов:
+     * Media3 публикует медиауведомление сам, и идентификатор у него тот же —
+     * 1001 (DEFAULT_NOTIFICATION_ID). Наша заглушка «Подключение…» занимала
+     * этот номер, а stopForeground(REMOVE) стирал уже чужое уведомление.
      *
-     * Иначе при обрыве до начала воспроизведения надпись «Подключение…»
-     * остаётся висеть в шторке, хотя ничего не подключается.
+     * Обязательный startForeground() после startForegroundService() решается
+     * без заглушки: сервис в foreground-режиме поднимается только из
+     * playStream(), который сразу ставит очередь и включает воспроизведение,
+     * и Media3 успевает перехватить уведомление задолго до истечения
+     * пяти секунд. Служебный вызов create() идёт через startService() и
+     * foreground-уведомления не требует.
      */
-    private fun clearPlaceholder() {
-        if (!placeholderShown) return
-        placeholderShown = false
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            stopForeground(STOP_FOREGROUND_REMOVE)
-        }
-    }
-
-    private fun buildPlaceholderNotification(): android.app.Notification {
-        val channelId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationManagerCompat.from(this).createNotificationChannel(
-                NotificationChannel(
-                    NOTIFICATION_CHANNEL_ID,
-                    getString(R.string.notification_channel),
-                    NotificationManager.IMPORTANCE_LOW,
-                )
-            )
-            NOTIFICATION_CHANNEL_ID
-        } else {
-            ""
-        }
-        val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
-            .setContentTitle(getString(R.string.notification_connecting))
-            .setSmallIcon(android.R.drawable.ic_media_play)
-            .setOngoing(true)
-            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)
-            .build()
-        return notification
-    }
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int =
+        super.onStartCommand(intent, flags, startId)
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
 
@@ -382,12 +326,6 @@ class PlaybackService : MediaSessionService() {
                 "PlaybackService",
                 "старт: «${track.title}» (${track.musicArtist}), в очереди ${queue.size}",
             )
-            // Заглушка обязана встать ДО prepare(). Media3 публикует своё
-            // уведомление по смене состояния плеера, а мы ставили заглушку
-            // после prepare() — то есть перекрывали уже готовое уведомление
-            // плеера надписью «Подключение…», и Media3 больше не обновлял его,
-            // потому что состояние не менялось.
-            instance?.showPlaceholder()
             val items = queue.map { (item, itemUrl) -> buildItem(item, itemUrl) }
             val index = queue.indexOfFirst { (item, _) -> item.id == track.id }.coerceAtLeast(0)
             player.setMediaItems(items, index, 0L)

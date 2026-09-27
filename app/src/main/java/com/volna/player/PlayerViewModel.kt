@@ -658,6 +658,37 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /**
+     * «Слушать всё» по исполнителю: все треки всех его альбомов подряд.
+     *
+     * Отдельную очередь не заводим — треклист кладётся в тот же _albumTracks,
+     * поэтому «вперёд» и повтор уже работают как надо, а каждый следующий трек
+     * ищется тем же подбором, что и трек альбома.
+     *
+     * Дубли схлопываются по названию: один и тот же трек часто лежит в
+     * нескольких релизах (сингл и альбом), и без этого он играл бы дважды.
+     */
+    fun playAllArtist(artist: MusicCatalog.Artist) {
+        _catalogLoading.value = true
+        viewModelScope.launch {
+            val albums = _albums.value.ifEmpty { MusicCatalog.albumsOf(artist) }
+            val all = albums.flatMap { MusicCatalog.tracksOf(it) }
+                .distinctBy { it.title.trim().lowercase() }
+            if (all.isEmpty()) {
+                _catalogLoading.value = false
+                _streamState.value = StreamState.Error(
+                    getApplication<Application>().getString(R.string.error_artist_no_tracks),
+                )
+                return@launch
+            }
+            _albumTracks.value = all
+            _catalogLoading.value = false
+            // Стартуем со случайного трека: порядок альбомов в iTunes не
+            // имеет отношения к порядку прослушивания.
+            playCatalogTrack(all.random())
+        }
+    }
+
     fun openAlbum(album: MusicCatalog.Album) {
         _catalogLoading.value = true
         viewModelScope.launch {

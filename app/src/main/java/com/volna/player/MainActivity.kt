@@ -333,6 +333,7 @@ fun PlayerContent(
                                     viewModel.openAlbum(it)
                                     catalogRoute = CatalogRoute.Album(it)
                                 },
+                                onPlayAll = { viewModel.playAllArtist(route.artist) },
                             )
 
                             is CatalogRoute.Album -> AlbumScreen(

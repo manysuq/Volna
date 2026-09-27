@@ -113,4 +113,6 @@
     <string name="added_to_playlist">أُضيف إلى «%1$s»</string>
     <string name="downloads_title">التنزيلات</string>
     <string name="library_play">تشغيل</string>
+    <string name="error_artist_no_tracks">لم يُعثر على مقاطع لهذا الفنان</string>
+    <string name="artist_play_all">تشغيل الكل</string>
 </resources>

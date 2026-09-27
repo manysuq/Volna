@@ -23,8 +23,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +54,7 @@ fun ArtistScreen(
     onBack: () -> Unit,
     onOpenAlbum: (MusicCatalog.Album) -> Unit,
     modifier: Modifier = Modifier,
+    onPlayAll: () -> Unit = { },
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -106,10 +109,28 @@ fun ArtistScreen(
         }
 
         item {
+            // «Слушать всё» — не по альбомам, а сквозной треклист исполнителя.
+            FilledTonalButton(
+                onClick = onPlayAll,
+                modifier = Modifier.padding(start = 16.dp, top = 8.dp),
+            ) {
+                Icon(
+                    Icons.Filled.Shuffle,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Text(
+                    text = stringResource(R.string.artist_play_all),
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
+        }
+
+        item {
             Text(
                 text = stringResource(R.string.albums_title),
                 style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
+                modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 8.dp),
             )
         }
 

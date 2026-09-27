@@ -582,6 +582,21 @@ private fun SecondaryActions(
             downloadState == DownloadState.QUEUED
         val isDone = downloadState == DownloadState.DONE
         IconButton(
+            onClick = onToggleFavorite,
+            modifier = Modifier.size(48.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Favorite,
+                contentDescription = stringResource(R.string.favorite_toggle),
+                tint = if (isFavorite) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            )
+        }
+
+        IconButton(
             // Уже скачанный трек повторно не качаем: раньше нажатие на
             // «скачано» запускало загрузку заново, потому что условие
             // срабатывало только на активной загрузке. Слушать его можно

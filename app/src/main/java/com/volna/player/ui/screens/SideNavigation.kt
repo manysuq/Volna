@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -41,7 +42,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -228,65 +228,65 @@ private fun RowScope.ReorderableRail(
 ) {
     var draggingIndex by remember { mutableStateOf<Int?>(null) }
     var itemWidth by remember { mutableIntStateOf(0) }
+    // Порядок читается по ходу жеста: перестановка вызывает перекомпозицию, и
+    // если бы порядок был захвачен в замыкании pointerInput, жест бы
+    // перезапускался на каждом сдвиге и перетаскивание рассыпалось бы.
+    val liveOrder by rememberUpdatedState(order)
 
-    // Вкладки lays-out прямо в Row, без промежуточного Column: RotatedRail
-    // меряет содержимое с ограничением по высоте, равным толщине панели, и
-    // вложенный Column делил эту высоту между пунктами — на экране оставалась
-    // только первая вкладка.
     order.forEachIndexed { index, tab ->
-            val isDragging = draggingIndex == index
-            RailItem(
-                title = stringResource(tab.title),
-                icon = tab.icon,
-                selected = tab == current,
-                onClick = { onSelect(tab) },
-                modifier = Modifier
-                    .onGloballyPositioned {
-                        if (itemWidth == 0) itemWidth = it.size.width
-                    }
-                    .pointerInput(order, itemWidth) {
-                        detectDragGesturesAfterLongPress(
-                            onDragStart = { draggingIndex = index },
-                            onDragEnd = { draggingIndex = null },
-                            onDragCancel = { draggingIndex = null },
-                            onDrag = { change, dragAmount ->
-                                change.consume()
-                                if (itemWidth > 0) {
-                                    // dragAmount здесь — Offset, а не число:
-                                    // так объявлен onDrag у
-                                    // detectDragGesturesAfterLongPress. Раньше
-                                    // с ним сравнивали как со скаляром, и
-                                    // код не собирался.
-                                    //
-                                    // Ось x: вкладки уложены вдоль главной
-                                    // оси Row. Система уже развернула координаты
-                                    // под поворот панели, поэтому палец, идущий
-                                    // вдоль рельса, даёт движение именно по x.
-                                    val half = itemWidth / 2
-                                    val delta = dragAmount.x.toInt()
-                                    val shift = when {
-                                        delta > half -> 1
-                                        delta < -half -> -1
-                                        else -> 0
-                                    }
-                                    if (shift != 0) {
-                                        val from = draggingIndex ?: index
-                                        val destination = from + shift
-                                        // Явные границы вместо `in indices`:
-                                        // внутри pointerInput проверка по
-                                        // диапазону не разрешалась.
-                                        val last = order.size - 1
-                                        if (destination in 0..last && from in 0..last) {
-                                            onReorder(TabOrder.move(order, from, destination))
-                                            draggingIndex = destination
-                                        }
+        RailItem(
+            title = stringResource(tab.title),
+            icon = tab.icon,
+            selected = tab == current,
+            onClick = { onSelect(tab) },
+            modifier = Modifier
+                .onGloballyPositioned {
+                    if (itemWidth == 0) itemWidth = it.size.width
+                }
+                .pointerInput(itemWidth) {
+                    // Смещение накапливается: одно событие перетаскивания — это
+                    // единицы пикселей, и сравнивать его с шириной вкладки
+                    // бессмысленно, сдвиг никогда не происходил.
+                    var accumulated = 0f
+                    detectDragGesturesAfterLongPress(
+                        onDragStart = {
+                            accumulated = 0f
+                            draggingIndex = index
+                        },
+                        onDragEnd = {
+                            accumulated = 0f
+                            draggingIndex = null
+                        },
+                        onDragCancel = {
+                            accumulated = 0f
+                            draggingIndex = null
+                        },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            val list = liveOrder
+                            if (itemWidth > 0) {
+                                // Ось x: вкладки уложены вдоль главной оси
+                                // Row, а поворот панели система уже учла.
+                                accumulated += dragAmount.x
+                                while (kotlin.math.abs(accumulated) >= itemWidth) {
+                                    val step = if (accumulated > 0f) 1 else -1
+                                    accumulated -= step * itemWidth
+                                    val from = draggingIndex ?: index
+                                    val destination = from + step
+                                    val last = list.size - 1
+                                    if (from in 0..last && destination in 0..last) {
+                                        onReorder(TabOrder.move(list, from, destination))
+                                        draggingIndex = destination
+                                    } else {
+                                        break
                                     }
                                 }
-                            },
-                        )
-                    }
+                            }
+                        },
+                    )
+                }
                 .graphicsLayer {
-                    if (isDragging) {
+                    if (draggingIndex == index) {
                         scaleX = 1.08f
                         scaleY = 1.08f
                     }

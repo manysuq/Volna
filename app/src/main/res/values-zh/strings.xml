@@ -113,4 +113,6 @@
     <string name="added_to_playlist">已添加到「%1$s」</string>
     <string name="downloads_title">已下载</string>
     <string name="library_play">播放</string>
+    <string name="error_artist_no_tracks">未找到该歌手的曲目</string>
+    <string name="artist_play_all">播放全部</string>
 </resources>

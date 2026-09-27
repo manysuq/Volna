@@ -138,4 +138,6 @@
     <string name="added_to_playlist">Добавлено в «%1$s»</string>
     <string name="downloads_title">Скачанные</string>
     <string name="library_play">Слушать</string>
+    <string name="error_artist_no_tracks">У исполнителя не нашлось треков</string>
+    <string name="artist_play_all">Слушать всё</string>
 </resources>
