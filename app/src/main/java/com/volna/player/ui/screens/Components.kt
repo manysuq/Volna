@@ -18,6 +18,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -89,6 +92,13 @@ fun TrackRow(
     onDownload: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
+    // Медиатека: сердечко и действия над треком. Все необязательные, чтобы
+    // экраны, которым они не нужны, ничего не передавали.
+    isFavorite: Boolean? = null,
+    onToggleFavorite: (() -> Unit)? = null,
+    onMoveUp: (() -> Unit)? = null,
+    onMoveDown: (() -> Unit)? = null,
+    onRemoveFromList: (() -> Unit)? = null,
 ) {
     val isDownloading = download?.state == DownloadState.DOWNLOADING ||
         download?.state == DownloadState.QUEUED
@@ -157,6 +167,75 @@ fun TrackRow(
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            if (onMoveUp != null || onMoveDown != null) {
+                Column {
+                    if (onMoveUp != null) {
+                        SmallRoundButton(
+                            onClick = onMoveUp,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
+                        ) {
+                            Icon(
+                                Icons.Filled.KeyboardArrowUp,
+                                contentDescription = stringResource(R.string.playlist_move_up),
+                            )
+                        }
+                    }
+                    if (onMoveDown != null) {
+                        SmallRoundButton(
+                            onClick = onMoveDown,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
+                        ) {
+                            Icon(
+                                Icons.Filled.KeyboardArrowDown,
+                                contentDescription = stringResource(R.string.playlist_move_down),
+                            )
+                        }
+                    }
+                }
+            }
+            if (onToggleFavorite != null) {
+                SmallRoundButton(
+                    onClick = onToggleFavorite,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = if (isFavorite == true) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    ),
+                ) {
+                    Icon(
+                        Icons.Filled.Favorite,
+                        contentDescription = stringResource(R.string.favorite_toggle),
+                        tint = if (isFavorite == true) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
+                }
+            }
+            if (onRemoveFromList != null) {
+                SmallRoundButton(
+                    onClick = onRemoveFromList,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
+                ) {
+                    Icon(
+                        Icons.Filled.Close,
+                        contentDescription = stringResource(R.string.playlist_remove),
+                    )
+                }
+            }
             if (isDownloading) {
                 SmallRoundButton(
                     onClick = onCancel,

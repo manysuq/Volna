@@ -92,4 +92,23 @@
     <string name="downloads_play">Écouter</string>
     <string name="download_publish_failed">Impossible d’enregistrer le fichier</string>
     <string name="downloads_count">%1$d titres, %2$s</string>
+    <string name="tab_library">Bibliothèque</string>
+    <string name="favorites_title">Aimés</string>
+    <string name="favorites_empty">Touchez le cœur d’un titre pour l’ajouter ici</string>
+    <string name="favorite_toggle">J’aime</string>
+    <string name="playlists_title">Listes de lecture</string>
+    <string name="playlists_empty">Créez votre première liste avec le bouton +</string>
+    <string name="playlist_new">Nouvelle liste</string>
+    <string name="playlist_create">Créer</string>
+    <string name="playlist_cancel">Annuler</string>
+    <string name="playlist_delete">Supprimer la liste</string>
+    <string name="playlist_play_all">Tout lire</string>
+    <string name="playlist_empty">Cette liste est vide</string>
+    <string name="playlist_back">Retour</string>
+    <string name="playlist_name_hint">Nom de la liste</string>
+    <string name="playlist_remove">Retirer de la liste</string>
+    <string name="playlist_move_up">Monter</string>
+    <string name="playlist_move_down">Descendre</string>
+    <string name="playlist_add">Ajouter à une liste</string>
+    <string name="added_to_playlist">Ajouté à « %1$s »</string>
 </resources>

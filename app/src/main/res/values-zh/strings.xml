@@ -92,4 +92,23 @@
     <string name="downloads_play">播放</string>
     <string name="download_publish_failed">无法保存文件</string>
     <string name="downloads_count">%1$d 首，%2$s</string>
+    <string name="tab_library">音乐库</string>
+    <string name="favorites_title">喜欢</string>
+    <string name="favorites_empty">点击歌曲上的爱心即可加入这里</string>
+    <string name="favorite_toggle">喜欢</string>
+    <string name="playlists_title">播放列表</string>
+    <string name="playlists_empty">用 + 按钮创建第一个播放列表</string>
+    <string name="playlist_new">新建播放列表</string>
+    <string name="playlist_create">创建</string>
+    <string name="playlist_cancel">取消</string>
+    <string name="playlist_delete">删除播放列表</string>
+    <string name="playlist_play_all">播放全部</string>
+    <string name="playlist_empty">此播放列表为空</string>
+    <string name="playlist_back">返回</string>
+    <string name="playlist_name_hint">播放列表名称</string>
+    <string name="playlist_remove">从播放列表移除</string>
+    <string name="playlist_move_up">上移</string>
+    <string name="playlist_move_down">下移</string>
+    <string name="playlist_add">添加到播放列表</string>
+    <string name="added_to_playlist">已添加到「%1$s」</string>
 </resources>

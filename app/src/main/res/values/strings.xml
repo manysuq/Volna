@@ -120,4 +120,23 @@
     <string name="downloads_play">Play</string>
     <string name="download_publish_failed">Could not save the file to shared storage</string>
     <string name="downloads_count">%1$d tracks, %2$s</string>
+    <string name="tab_library">Library</string>
+    <string name="favorites_title">Liked</string>
+    <string name="favorites_empty">Tap the heart on a track to add it here</string>
+    <string name="favorite_toggle">Like</string>
+    <string name="playlists_title">Playlists</string>
+    <string name="playlists_empty">Create your first playlist with the + button</string>
+    <string name="playlist_new">New playlist</string>
+    <string name="playlist_create">Create</string>
+    <string name="playlist_cancel">Cancel</string>
+    <string name="playlist_delete">Delete playlist</string>
+    <string name="playlist_play_all">Play all</string>
+    <string name="playlist_empty">This playlist is empty</string>
+    <string name="playlist_back">Back</string>
+    <string name="playlist_name_hint">Playlist name</string>
+    <string name="playlist_remove">Remove from playlist</string>
+    <string name="playlist_move_up">Move up</string>
+    <string name="playlist_move_down">Move down</string>
+    <string name="playlist_add">Add to playlist</string>
+    <string name="added_to_playlist">Added to %1$s</string>
 </resources>

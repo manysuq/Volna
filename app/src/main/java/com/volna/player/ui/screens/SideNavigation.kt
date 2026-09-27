@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Search
@@ -51,6 +52,7 @@ enum class AppTab(@StringRes val title: Int, val icon: ImageVector) {
     Albums(R.string.tab_albums, Icons.Filled.Album),
     Recommendations(R.string.tab_similar, Icons.Filled.Explore),
     Downloads(R.string.tab_downloads, Icons.Filled.LibraryMusic),
+    Library(R.string.tab_library, Icons.Filled.Favorite),
 }
 
 /**

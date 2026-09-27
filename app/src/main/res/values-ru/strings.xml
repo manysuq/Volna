@@ -117,4 +117,23 @@
     <string name="downloads_play">Слушать</string>
     <string name="download_publish_failed">Не удалось сохранить файл в общую папку</string>
     <string name="downloads_count">%1$d треков, %2$s</string>
+    <string name="tab_library">Медиатека</string>
+    <string name="favorites_title">Нравится</string>
+    <string name="favorites_empty">Нажмите на сердечко у трека — он появится здесь</string>
+    <string name="favorite_toggle">В любимое</string>
+    <string name="playlists_title">Плейлисты</string>
+    <string name="playlists_empty">Создайте первый плейлист кнопкой +</string>
+    <string name="playlist_new">Новый плейлист</string>
+    <string name="playlist_create">Создать</string>
+    <string name="playlist_cancel">Отмена</string>
+    <string name="playlist_delete">Удалить плейлист</string>
+    <string name="playlist_play_all">Слушать всё</string>
+    <string name="playlist_empty">В этом плейлисте пусто</string>
+    <string name="playlist_back">Назад</string>
+    <string name="playlist_name_hint">Название плейлиста</string>
+    <string name="playlist_remove">Убрать из плейлиста</string>
+    <string name="playlist_move_up">Выше</string>
+    <string name="playlist_move_down">Ниже</string>
+    <string name="playlist_add">В плейлист</string>
+    <string name="added_to_playlist">Добавлено в «%1$s»</string>
 </resources>

@@ -8,6 +8,8 @@ import androidx.media3.common.Player
 import com.volna.player.catalog.MusicCatalog
 import com.volna.player.download.DownloadManager
 import com.volna.player.download.SavedTrack
+import com.volna.player.library.LibraryStore
+import com.volna.player.library.Playlist
 import com.volna.player.download.DownloadProgress
 import com.volna.player.player.PlaybackService
 import com.volna.player.search.Track
@@ -34,6 +36,22 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private val resolver = StreamResolver()
 
     val downloads = DownloadManager(app)
+
+    /** «Нравится» и свои плейлисты. */
+    private val library = LibraryStore(app)
+
+    private val _favorites = MutableStateFlow<List<Track>>(emptyList())
+    val favorites: StateFlow<List<Track>> = _favorites.asStateFlow()
+
+    private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())
+    val playlists: StateFlow<List<Playlist>> = _playlists.asStateFlow()
+
+    /** Треки открытого плейлиста; null — открыт список плейлистов. */
+    private val _openPlaylist = MutableStateFlow<Playlist?>(null)
+    val openPlaylist: StateFlow<Playlist?> = _openPlaylist.asStateFlow()
+
+    private val _playlistTracks = MutableStateFlow<List<Track>>(emptyList())
+    val playlistTracks: StateFlow<List<Track>> = _playlistTracks.asStateFlow()
 
     /** Скачанные треки: читается из реестра, переживает перезапуск. */
     private val _savedTracks = MutableStateFlow<List<SavedTrack>>(emptyList())
@@ -319,6 +337,62 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         _playbackError.value = null
         viewModelScope.launch { startPlayback(track, item.uri) }
     }
+
+    // ── Библиотека: «нравится» и плейлисты ────────────────────────────────
+
+    fun refreshLibrary() {
+        _favorites.value = library.favorites()
+        _playlists.value = library.playlists()
+        _openPlaylist.value?.let { _playlistTracks.value = library.tracksOf(it.id) }
+    }
+
+    /** Переключает «нравится» у трека. */
+    fun toggleFavorite(track: Track) {
+        library.toggleFavorite(track)
+        refreshLibrary()
+    }
+
+    fun createPlaylist(name: String): Playlist {
+        val playlist = library.createPlaylist(name)
+        refreshLibrary()
+        return playlist
+    }
+
+    fun openPlaylist(playlist: Playlist) {
+        _openPlaylist.value = playlist
+        _playlistTracks.value = library.tracksOf(playlist.id)
+    }
+
+    fun closePlaylist() {
+        _openPlaylist.value = null
+        _playlistTracks.value = emptyList()
+    }
+
+    fun deletePlaylist(playlist: Playlist) {
+        if (_openPlaylist.value?.id == playlist.id) closePlaylist()
+        library.deletePlaylist(playlist.id)
+        refreshLibrary()
+    }
+
+    fun addToPlaylist(playlistId: String, track: Track) {
+        library.addToPlaylist(playlistId, track)
+        refreshLibrary()
+    }
+
+    fun removeFromPlaylist(playlistId: String, trackId: String) {
+        library.removeFromPlaylist(playlistId, trackId)
+        refreshLibrary()
+    }
+
+    fun moveInPlaylist(playlistId: String, trackId: String, delta: Int) {
+        library.moveInPlaylist(playlistId, trackId, delta)
+        refreshLibrary()
+    }
+
+    fun isInPlaylist(playlistId: String, trackId: String): Boolean =
+        library.contains(playlistId, trackId)
+
+    fun isFavorite(trackId: String): Boolean = _favorites.value.any { it.id == trackId }
 
     /** Удаляет файл с диска и запись из реестра. */
     fun deleteSaved(trackId: String) {

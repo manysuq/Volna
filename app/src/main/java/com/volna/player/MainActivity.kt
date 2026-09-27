@@ -47,6 +47,7 @@ import com.volna.player.ui.screens.AppTab
 import com.volna.player.ui.screens.ArtistScreen
 import com.volna.player.ui.screens.DownloadsScreen
 import com.volna.player.ui.screens.FullPlayerScreen
+import com.volna.player.ui.screens.LibraryScreen
 import com.volna.player.ui.screens.MiniPlayer
 import com.volna.player.ui.screens.RecommendationsScreen
 import com.volna.player.ui.screens.SearchScreen
@@ -177,10 +178,17 @@ fun PlayerContent(
     val albumTracks by viewModel.albumTracks.collectAsStateWithLifecycle()
     val catalogLoading by viewModel.catalogLoading.collectAsStateWithLifecycle()
     val savedTracks by viewModel.savedTracks.collectAsStateWithLifecycle()
+    val favorites by viewModel.favorites.collectAsStateWithLifecycle()
+    val playlists by viewModel.playlists.collectAsStateWithLifecycle()
+    val openPlaylist by viewModel.openPlaylist.collectAsStateWithLifecycle()
+    val playlistTracks by viewModel.playlistTracks.collectAsStateWithLifecycle()
 
     // Реестр читается при показе вкладки: иначе он оставался бы пустым после
     // скачивания до перезапуска.
-    LaunchedEffect(tab) { if (tab == AppTab.Downloads) viewModel.refreshSaved() }
+    LaunchedEffect(tab) {
+        if (tab == AppTab.Downloads) viewModel.refreshSaved()
+        if (tab == AppTab.Library) viewModel.refreshLibrary()
+    }
 
     // Системный «назад» должен закрывать верхний слой, а не выбрасывать из
     // приложения. Порядок в списке — это приоритет: верхний слой первый,
@@ -190,6 +198,7 @@ fun PlayerContent(
     val openLayers = listOfNotNull(
         fullPlayer.takeIf { it }?.let { "player" },
         showSettings.takeIf { it }?.let { "settings" },
+        openPlaylist?.let { "playlist" },
         (catalogRoute as? CatalogRoute.Album)?.let { "album" },
         (catalogRoute as? CatalogRoute.Artist)?.let { "artist" },
     )
@@ -197,6 +206,7 @@ fun PlayerContent(
         when (openLayers.first()) {
             "player" -> fullPlayer = false
             "settings" -> showSettings = false
+            "playlist" -> viewModel.closePlaylist()
             else -> catalogRoute = CatalogRoute.Artists
         }
     }
@@ -257,6 +267,8 @@ fun PlayerContent(
                             onDownload = viewModel::download,
                             onCancelDownload = viewModel::cancelDownload,
                             onPlay = { track, all -> viewModel.playStream(track, all) },
+                            isFavorite = viewModel::isFavorite,
+                            onToggleFavorite = viewModel::toggleFavorite,
                         )
 
                         AppTab.Recommendations -> RecommendationsScreen(
@@ -267,6 +279,24 @@ fun PlayerContent(
                             onPlay = { track, all -> viewModel.playStream(track, all) },
                             onDownload = viewModel::download,
                             onCancelDownload = viewModel::cancelDownload,
+                            isFavorite = viewModel::isFavorite,
+                            onToggleFavorite = viewModel::toggleFavorite,
+                        )
+
+                        AppTab.Library -> LibraryScreen(
+                            favorites = favorites,
+                            playlists = playlists,
+                            openPlaylist = openPlaylist,
+                            playlistTracks = playlistTracks,
+                            currentTrackId = nowPlaying?.id,
+                            onPlay = { track, all -> viewModel.playStream(track, all) },
+                            onCreatePlaylist = viewModel::createPlaylist,
+                            onOpenPlaylist = viewModel::openPlaylist,
+                            onClosePlaylist = viewModel::closePlaylist,
+                            onDeletePlaylist = viewModel::deletePlaylist,
+                            onRemoveFromPlaylist = { viewModel.removeFromPlaylist(openPlaylist?.id ?: "", it) },
+                            onMoveInPlaylist = { id, delta -> viewModel.moveInPlaylist(openPlaylist?.id ?: "", id, delta) },
+                            onToggleFavorite = viewModel::toggleFavorite,
                         )
 
                         AppTab.Downloads -> DownloadsScreen(

@@ -92,4 +92,23 @@
     <string name="downloads_play">Escuchar</string>
     <string name="download_publish_failed">No se pudo guardar el archivo</string>
     <string name="downloads_count">%1$d pistas, %2$s</string>
+    <string name="tab_library">Biblioteca</string>
+    <string name="favorites_title">Me gusta</string>
+    <string name="favorites_empty">Toca el corazón de una pista para añadirla aquí</string>
+    <string name="favorite_toggle">Me gusta</string>
+    <string name="playlists_title">Listas</string>
+    <string name="playlists_empty">Crea tu primera lista con el botón +</string>
+    <string name="playlist_new">Nueva lista</string>
+    <string name="playlist_create">Crear</string>
+    <string name="playlist_cancel">Cancelar</string>
+    <string name="playlist_delete">Eliminar lista</string>
+    <string name="playlist_play_all">Reproducir todo</string>
+    <string name="playlist_empty">Esta lista está vacía</string>
+    <string name="playlist_back">Atrás</string>
+    <string name="playlist_name_hint">Nombre de la lista</string>
+    <string name="playlist_remove">Quitar de la lista</string>
+    <string name="playlist_move_up">Subir</string>
+    <string name="playlist_move_down">Bajar</string>
+    <string name="playlist_add">Añadir a una lista</string>
+    <string name="added_to_playlist">Añadido a «%1$s»</string>
 </resources>

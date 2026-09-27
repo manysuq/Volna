@@ -39,6 +39,8 @@ fun RecommendationsScreen(
     onDownload: (Track) -> Unit,
     onCancelDownload: (String) -> Unit,
     modifier: Modifier = Modifier,
+    isFavorite: (String) -> Boolean = { false },
+    onToggleFavorite: (Track) -> Unit = { },
 ) {
     when {
         current == null -> Hint(
@@ -75,6 +77,8 @@ fun RecommendationsScreen(
                     onPlay = { onPlay(track, recommendations) },
                     onDownload = { onDownload(track) },
                     onCancel = { onCancelDownload(track.id) },
+                    isFavorite = isFavorite(track.id),
+                    onToggleFavorite = { onToggleFavorite(track) },
                 )
             }
         }

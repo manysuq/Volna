@@ -92,4 +92,23 @@
     <string name="downloads_play">تشغيل</string>
     <string name="download_publish_failed">تعذّر حفظ الملف</string>
     <string name="downloads_count">%1$d مقطع، %2$s</string>
+    <string name="tab_library">المكتبة</string>
+    <string name="favorites_title">المفضلة</string>
+    <string name="favorites_empty">اضغط على القلب لإضافة المقطع هنا</string>
+    <string name="favorite_toggle">أعجبني</string>
+    <string name="playlists_title">قوائم التشغيل</string>
+    <string name="playlists_empty">أنشئ أول قائمة بزر +</string>
+    <string name="playlist_new">قائمة جديدة</string>
+    <string name="playlist_create">إنشاء</string>
+    <string name="playlist_cancel">إلغاء</string>
+    <string name="playlist_delete">حذف القائمة</string>
+    <string name="playlist_play_all">تشغيل الكل</string>
+    <string name="playlist_empty">القائمة فارغة</string>
+    <string name="playlist_back">رجوع</string>
+    <string name="playlist_name_hint">اسم القائمة</string>
+    <string name="playlist_remove">إزالة من القائمة</string>
+    <string name="playlist_move_up">تحريك لأعلى</string>
+    <string name="playlist_move_down">تحريك لأسفل</string>
+    <string name="playlist_add">إضافة إلى قائمة</string>
+    <string name="added_to_playlist">أُضيف إلى «%1$s»</string>
 </resources>
