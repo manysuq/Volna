@@ -43,10 +43,13 @@ internal class RotatingStreamDataSource(
         // что к моменту, когда старая кончится, новая уже готова.
         session?.let { it.refreshIfNeeded() }
 
+        var failure: IOException? = null
+
         val first = session?.url
         if (first != null) {
             val opened = tryOpen(dataSpec, first)
             if (opened != null) return opened
+            failure = lastFailure
         }
 
         // Не открылось. Ссылка битая — берём новую и пробуем ещё раз, не
@@ -56,9 +59,26 @@ internal class RotatingStreamDataSource(
         if (second != null && second != first) {
             val opened = tryOpen(dataSpec, second)
             if (opened != null) return opened
+            failure = lastFailure ?: failure
         }
 
-        throw IOException("Свежая ссылка на поток не открылась")
+        // Причину отказа сохраняем: без неё Media3 отдаёт наружу
+        // ERROR_CODE_IO_UNSPECIFIED, и в отчёте не остаётся НИЧЕГО — ни
+        // кода ответа, ни адреса. Из-за этого шесть одинаковых строк в логе
+        // приходилось читать как загадку вместо ответа.
+        val reason = failure?.message ?: "без причины"
+        com.volna.player.LogBuffer.e(
+            TAG,
+            "поток не открылся: $reason (испытано ссылок: ${if (second == first) 1 else 2})",
+        )
+        throw IOException("Свежая ссылка на поток не открылась: $reason", failure)
+    }
+
+    /** Последняя причина, по которой адрес не открылся. */
+    private var lastFailure: IOException? = null
+
+    private companion object {
+        const val TAG = "PlaybackService"
     }
 
     /** Возвращает позицию начала или null, если адрес не открылся. */
@@ -66,10 +86,13 @@ internal class RotatingStreamDataSource(
         val source = createFor(url)
         upstream = source
         source.open(dataSpec.buildUpon().setUri(url).build()).also {
+            lastFailure = null
             session?.onOpened(url)
         }
     } catch (e: IOException) {
         // Адрес не годен. Сбрасываем источник и пробуем следующий.
+        // Причину запоминаем: она и есть ответ, что именно сломалось.
+        lastFailure = e
         closeUpstream()
         session?.onFailed(url)
         null

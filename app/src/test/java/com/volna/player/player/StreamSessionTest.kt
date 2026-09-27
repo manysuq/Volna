@@ -49,9 +49,21 @@ class StreamSessionTest {
 
     /** Отказ 403 — обновляем сразу, не ждём следующего порога. */
     @Test
-    fun `после отказа обновляем немедленно`() {
+    fun `после отказа ссылку не гоним`() {
         val s = session()
         s.adopt("первая")
+        s.onFailed("первая")
+        s.refreshIfNeeded()
+        assertEquals("отказ не должен плодить запросы", "первая", s.url)
+        assertEquals("ни одного запроса за ссылкой", 0, calls)
+    }
+
+    /** Но когда квота исчерпана, обновляемся даже после отказа. */
+    @Test
+    fun `после отказа и исчерпанной квоты обновляем`() {
+        val s = session()
+        s.adopt("первая")
+        s.onRead(StreamRotation.ROTATE_AFTER_BYTES)
         s.onFailed("первая")
         s.refreshIfNeeded()
         assertEquals("ссылка-1", s.url)
@@ -108,19 +120,27 @@ class StreamSessionTest {
      * не должна порождать следующую: иначе выедается лимит запросов к
      * YouTube и в конце концов ошибка доходит до плеера.
      */
+    /**
+     * Ключевой случай из ночного отчёта: ссылка менялась каждые 2-3 секунды.
+     *
+     * Кружение останавливает одно: неудачная свежая ссылка не даёт права на
+     * следующую. Пока ни одна не открылась, новые дадут тот же отказ, а
+     * запросы к YouTube кончатся быстрее, чем ссылка перестанет отказывать.
+     */
     @Test
     fun `неудачная свежая ссылка не вызывает следующую`() {
         val s = session()
         s.adopt("принятая")
-        s.onFailed("принятая")
+        s.onRead(StreamRotation.ROTATE_AFTER_BYTES)   // квота исчерпана
         s.refreshIfNeeded()
         val fresh = s.url
+        assertEquals("взята свежая ссылка", "ссылка-1", fresh)
         assertFalse("свежая ссылка ещё не проверена", s.canRefresh())
 
         s.onFailed(fresh!!)
         s.refreshIfNeeded()          // крутить нельзя
-        assertEquals(fresh, s.url)
-        assertEquals("за неудачу берётся ровно одна свежая ссылка", 1, calls)
+        assertEquals("ссылка не меняется", fresh, s.url)
+        assertEquals("за одну свежую ссылку — один запрос", 1, calls)
     }
 
     /** Успешное открытие снимает запрет: можно взять следующую ссылку. */
@@ -128,11 +148,11 @@ class StreamSessionTest {
     fun `удачное открытие разрешает обновление снова`() {
         val s = session()
         s.adopt("первая")
-        s.onFailed("первая")
+        s.onRead(StreamRotation.ROTATE_AFTER_BYTES)
         s.refreshIfNeeded()
-        assertFalse(s.canRefresh())
+        assertFalse("после выдачи ссылки ждём проверки", s.canRefresh())
 
         s.onOpened("вторая")
-        assertTrue(s.canRefresh())
+        assertTrue("открылось — можно и дальше", s.canRefresh())
     }
 }
