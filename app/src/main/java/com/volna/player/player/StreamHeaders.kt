@@ -13,25 +13,53 @@ internal object StreamHeaders {
     const val USER_AGENT = "User-Agent"
 
     /**
-     * Диапазон для первого запроса.
+     * Размер одного куска потока.
      *
-     * `bytes=0-` — «от начала и до конца», а не кусок: длину потока ExoPlayer
-     * на первом открытии ещё не знает, и обрезанный диапазон сбил бы его
-     * подсчёт.
+     * Замеры на живых ссылках решили всё: запрос с открытым концом `bytes=0-`
+     * всегда даёт 403, а ограниченный `bytes=0-1048575` (1 МБ) — 206. Граница
+     * отказа где-то между 1 и 2 МБ (`bytes=0-2010000` уже 403). Поэтому всегда
+     * просим ограниченный кусок, и берём его с запасом ниже границы.
+     *
+     * Это и было корнем всей беды: RangeDataSource слал `bytes=0-`, а проверка
+     * ссылки слала `bytes=0-1023` — проверка проходила, а плеер получал отказ
+     * на том же самом адресе. Раньше думали, что «у ссылки бюджет на объём»,
+     * но бюджет тут ни при чём: дело в открытом конце диапазона.
      */
-    const val FIRST_RANGE = "bytes=0-"
+    const val CHUNK_BYTES = 1048576L
+
+    /**
+     * Диапазон для запроса с позиции.
+     *
+     * Всегда ограниченный, всегда отсюда: продолжение трека с позиции N
+     * обязано просить с N, а не с нуля — иначе сервер отдаст начало, а плеер
+     * ждёт середину, и поток не соберётся.
+     */
+    fun rangeFor(position: Long): String =
+        "bytes=$position-${position + CHUNK_BYTES - 1}"
 
     /**
      * Добавляет [RANGE], если его ещё нет.
      *
      * Нужен из-за особенности YouTube: на запрос **без** Range он отвечает 403,
-     * на запрос с Range — 206. Проверка ссылки в [com.volna.player.stream.StreamResolver]
-     * Range шлёт, а ExoPlayer при первом открытии файла — нет, потому что
-     * `buildRangeRequestHeader` для позиции 0 возвращает null. Отсюда были
-     * «403, потом 403, и только с третьего раза играет».
+     * на запрос с Range — 206. ExoPlayer при первом открытии файла Range не
+     * формирует (`buildRangeRequestHeader` для позиции 0 возвращает null),
+     * а при продолжении с позиции N — формирует открытый `bytes=N-`, который
+     * тоже даёт 403. Поэтому подставляем свой ограниченный кусок.
+     *
+     * Если ExoPlayer уже задал свой диапазон (перемотка), его не трогаем.
      */
-    fun withRange(headers: Map<String, String>): Map<String, String> {
-        if (headers.keys.any { it.equals(RANGE, ignoreCase = true) }) return headers
-        return headers + (RANGE to FIRST_RANGE)
+    fun withRange(headers: Map<String, String>, position: Long = 0L): Map<String, String> {
+        val existing = headers.keys.firstOrNull { it.equals(RANGE, ignoreCase = true) }
+        if (existing != null) {
+            // Свой диапазон ExoPlayer задаёт редко (перемотка), и он бывает
+            // открытым `bytes=N-`, а открытый конец даёт 403. Поэтому открытый
+            // конец ужимаем до своего куска с той же позиции.
+            val value = headers[existing] ?: return headers
+            val open = Regex("^bytes=(\\d+)-$").find(value.trim())
+            if (open == null) return headers
+            val from = open.groupValues[1].toLongOrNull() ?: return headers
+            return headers + (existing to rangeFor(from))
+        }
+        return headers + (RANGE to rangeFor(position))
     }
 }

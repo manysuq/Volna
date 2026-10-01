@@ -40,7 +40,11 @@ internal class RangeDataSource(
     }
 
     override fun open(dataSpec: DataSpec): Long {
-        var headers = StreamHeaders.withRange(dataSpec.httpRequestHeaders)
+        // Позицию берём из dataSpec: продолжение трека обязано просить с
+        // нужного места. Раньше здесь всегда слался `bytes=0-`, и на замеры
+        // живьём вышло, что открытый конец даёт 403, а ограниченный кусок —
+        // 206. Теперь кусок ограничен всегда: `bytes=N..N+1МБ`.
+        var headers = StreamHeaders.withRange(dataSpec.httpRequestHeaders, dataSpec.position)
         userAgent.value?.let { headers = headers + (StreamHeaders.USER_AGENT to it) }
         val patched = dataSpec.buildUpon()
             .setHttpRequestHeaders(headers)

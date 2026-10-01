@@ -123,16 +123,30 @@ public final class Http {
      * проверка читала ровно 1 КБ с нуля, поэтому такую ссылку пропускала:
      * годная на килобайт, но негодная на трек целиком.
      */
+    /**
+     * Размер куска проверки.
+     *
+     * 1 МБ вместо 1 КБ не от жадности: сервер отдаёт 403 на запросы с
+     * открытым концом диапазона (`bytes=0-` умирает всегда, `bytes=0-1048575`
+     * живёт), и плеер ходит кусками по мегабайту. Проверка обязана ходить так
+     * же: ссылка, рабочая «на килобайт», но 403 «на мегабайт» — это и есть
+     * та самая ссылка, которая у плеера не открывается. Замерено живьём.
+     */
+    public static final long PROBE_CHUNK_BYTES = 1048576L;
+
     public static int probeRange(String url, String userAgent, long offset) {
         Map<String, String> headers = new LinkedHashMap<String, String>();
         headers.put("User-Agent", userAgent);
         headers.put("Accept", "*/*");
-        headers.put("Range", "bytes=" + offset + "-" + (offset + 1023L));
+        headers.put("Range", "bytes=" + offset + "-" + (offset + PROBE_CHUNK_BYTES - 1L));
         Connection conn = null;
         try {
             conn = open(url, "GET", headers);
             InputStream in = conn.body();
             if (in != null) {
+                // Читаем не весь мегабайт, а его начало: серверу важно, что
+                // мы просим ограниченный кусок (иначе 403), а не сколько
+                // реально выкачаем.
                 in.read(new byte[1024]);
             }
             return conn.status;

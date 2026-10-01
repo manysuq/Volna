@@ -17,19 +17,31 @@ import org.junit.Test
 class StreamHeadersTest {
 
     @Test
-    fun `добавляет Range когда его нет`() {
+    fun `первый запрос ограничен мегабайтом`() {
         val headers = StreamHeaders.withRange(mapOf("Accept" to "*/*"))
 
-        assertEquals("bytes=0-", headers["Range"])
+        assertEquals("bytes=0-1048575", headers["Range"])
     }
 
     @Test
-    fun `не перетирает Range который задал ExoPlayer`() {
-        // При перемотке ExoPlayer формирует свой диапазон — подменять его
-        // на «с начала» нельзя, иначе перемотка сломалась бы.
-        val withRange = mapOf("Range" to "bytes=500000-600000")
+    fun `продолжение просит со своей позиции тем же куском`() {
+        val headers = StreamHeaders.withRange(emptyMap(), 500000L)
 
-        val result = StreamHeaders.withRange(withRange)
+        assertEquals("bytes=500000-1548575", headers["Range"])
+    }
+
+    @Test
+    fun `открытый конец от ExoPlayer ужимаем до куска`() {
+        // Перемотка: ExoPlayer просит bytes=500000- (открытый конец даёт 403
+        // на живьём замере), поэтому ужимаем до своего куска с той же позиции.
+        val result = StreamHeaders.withRange(mapOf("Range" to "bytes=500000-"))
+
+        assertEquals("bytes=500000-1548575", result["Range"])
+    }
+
+    @Test
+    fun `ограниченный диапазон ExoPlayer не трогаем`() {
+        val result = StreamHeaders.withRange(mapOf("Range" to "bytes=500000-600000"))
 
         assertEquals("bytes=500000-600000", result["Range"])
     }
@@ -47,14 +59,10 @@ class StreamHeadersTest {
 
         assertEquals("*/*", result["Accept"])
         assertEquals("volna", result["User-Agent"])
-        assertEquals("bytes=0-", result["Range"])
-    }
-
-    @Test
-    fun `пустые заголовки тоже получают Range`() {
-        assertEquals("bytes=0-", StreamHeaders.withRange(emptyMap())["Range"])
+        assertEquals("bytes=0-1048575", result["Range"])
     }
 }
+
 /**
  * User-Agent идёт вместе со ссылкой.
  *
